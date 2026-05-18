@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { EntityDetailPage } from "@/components/EntityDetailPage";
-import { fetchPenById, listPenIds, type PenRow } from "@/lib/supabase/pens";
+import { PrototypeShell } from "@/components/PrototypeShell";
+import { fetchPenById, listPenIds } from "@/lib/supabase/pens";
 import { buildPenReplace } from "@/lib/entities/pen-replace";
 
 type Params = { id: string };
 
 export async function generateStaticParams(): Promise<Params[]> {
-  const ids = await listPenIds();
-  return ids.map((id) => ({ id }));
+  return (await listPenIds()).map((id) => ({ id }));
 }
 
 export async function generateMetadata({
@@ -29,19 +28,15 @@ export default async function PenDetailPage({
 }) {
   const { id } = await params;
   const pen = await fetchPenById(id);
-  return (
-    <EntityDetailPage<PenRow>
-      prototypeFile="pen.html"
-      row={pen}
-      buildReplace={buildPenReplace}
-      notFound={
-        <main style={{ padding: "4rem 2rem", fontFamily: "monospace" }}>
-          <h1>Pen not found</h1>
-          <p>
-            No row in <code>public.pens</code> with <code>id = {id}</code>.
-          </p>
-        </main>
-      }
-    />
-  );
+  if (!pen) {
+    return (
+      <main style={{ padding: "4rem 2rem", fontFamily: "monospace" }}>
+        <h1>Pen not found</h1>
+        <p>
+          No row in <code>public.pens</code> with <code>id = {id}</code>.
+        </p>
+      </main>
+    );
+  }
+  return <PrototypeShell prototypeFile="pen.html" replace={buildPenReplace(pen)} />;
 }

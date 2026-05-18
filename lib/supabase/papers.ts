@@ -24,3 +24,13 @@ export async function listPaperIds(): Promise<string[]> {
   if (error) throw new Error(`listPaperIds failed: ${error.message}`);
   return (data ?? []).map((r) => r.id);
 }
+
+// Used by the home page's paper-archive grid.
+export async function fetchPapers(limit?: number): Promise<PaperRow[]> {
+  const supabase = await createSupabaseServerClient();
+  let q = supabase.from("papers").select("*").order("archive_number", { ascending: true });
+  if (limit != null) q = q.limit(limit);
+  const { data, error } = await q;
+  if (error) throw new Error(`fetchPapers failed: ${error.message}`);
+  return data ?? [];
+}

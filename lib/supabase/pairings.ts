@@ -35,3 +35,18 @@ export async function listPairingIds(): Promise<string[]> {
   if (error) throw new Error(`listPairingIds failed: ${error.message}`);
   return (data ?? []).map((r) => r.id);
 }
+
+// Used by the home page's pairings catalogue. Joins pen+paper sides.
+export async function fetchPairings(
+  limit?: number,
+): Promise<PairingWithSides[]> {
+  const supabase = await createSupabaseServerClient();
+  let q = supabase
+    .from("pairings")
+    .select("*, pen:pens(*), paper:papers(*)")
+    .order("affinity_score", { ascending: false });
+  if (limit != null) q = q.limit(limit);
+  const { data, error } = await q;
+  if (error) throw new Error(`fetchPairings failed: ${error.message}`);
+  return (data ?? []) as unknown as PairingWithSides[];
+}

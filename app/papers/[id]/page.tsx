@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-import { EntityDetailPage } from "@/components/EntityDetailPage";
-import {
-  fetchPaperById,
-  listPaperIds,
-  type PaperRow,
-} from "@/lib/supabase/papers";
+import { PrototypeShell } from "@/components/PrototypeShell";
+import { fetchPaperById, listPaperIds } from "@/lib/supabase/papers";
 import { buildPaperReplace } from "@/lib/entities/paper-replace";
 
 type Params = { id: string };
 
 export async function generateStaticParams(): Promise<Params[]> {
-  const ids = await listPaperIds();
-  return ids.map((id) => ({ id }));
+  return (await listPaperIds()).map((id) => ({ id }));
 }
 
 export async function generateMetadata({
@@ -31,19 +26,15 @@ export default async function PaperDetailPage({
 }) {
   const { id } = await params;
   const paper = await fetchPaperById(id);
-  return (
-    <EntityDetailPage<PaperRow>
-      prototypeFile="paper.html"
-      row={paper}
-      buildReplace={buildPaperReplace}
-      notFound={
-        <main style={{ padding: "4rem 2rem", fontFamily: "monospace" }}>
-          <h1>Paper not found</h1>
-          <p>
-            No row in <code>public.papers</code> with <code>id = {id}</code>.
-          </p>
-        </main>
-      }
-    />
-  );
+  if (!paper) {
+    return (
+      <main style={{ padding: "4rem 2rem", fontFamily: "monospace" }}>
+        <h1>Paper not found</h1>
+        <p>
+          No row in <code>public.papers</code> with <code>id = {id}</code>.
+        </p>
+      </main>
+    );
+  }
+  return <PrototypeShell prototypeFile="paper.html" replace={buildPaperReplace(paper)} />;
 }

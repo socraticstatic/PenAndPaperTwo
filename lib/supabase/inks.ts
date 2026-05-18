@@ -18,6 +18,18 @@ export async function fetchInkById(id: string): Promise<InkRow | null> {
   return data;
 }
 
+// Used by the /ink archive grid. Public-read RLS allows the SSR client
+// to do this without auth. Returns rows in archive-number order so the
+// grid renders in the same sequence the editor seeded them.
+export async function fetchInks(limit?: number): Promise<InkRow[]> {
+  const supabase = await createSupabaseServerClient();
+  let q = supabase.from("inks").select("*").order("archive_number", { ascending: true });
+  if (limit != null) q = q.limit(limit);
+  const { data, error } = await q;
+  if (error) throw new Error(`fetchInks failed: ${error.message}`);
+  return data ?? [];
+}
+
 export async function listInkIds(): Promise<string[]> {
   const supabase = createSupabaseBuildClient();
   const { data, error } = await supabase.from("inks").select("id");

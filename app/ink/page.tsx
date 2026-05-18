@@ -1,13 +1,24 @@
-import { loadPrototypePage } from "@/lib/prototype";
-import { PrototypeBody } from "@/components/PrototypeBody";
 import type { Metadata } from "next";
+import { PrototypeShell } from "@/components/PrototypeShell";
+import { loadPrototypePage } from "@/lib/prototype";
+import { fetchInks } from "@/lib/supabase/inks";
+import { buildInkArchiveReplace } from "@/lib/entities/ink-archive-replace";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await loadPrototypePage("ink.html");
   return { title: page.title };
 }
 
-export default async function InkPage() {
-  const page = await loadPrototypePage("ink.html");
-  return <PrototypeBody page={page} />;
+// Ink Cupboard archive. The prototype ships 8 hard-coded swatch cards;
+// we replace the whole `.ink-archive` grid contents with `<a class=ink-card>`
+// elements built from `public.inks` rows. Filter chips above the grid
+// are left as-is for now — wiring them to facet RPC calls is D4 / future.
+export default async function InkArchivePage() {
+  const inks = await fetchInks();
+  return (
+    <PrototypeShell
+      prototypeFile="ink.html"
+      replace={buildInkArchiveReplace(inks)}
+    />
+  );
 }

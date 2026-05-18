@@ -26,3 +26,13 @@ export async function listPenIds(): Promise<string[]> {
   if (error) throw new Error(`listPenIds failed: ${error.message}`);
   return (data ?? []).map((r) => r.id);
 }
+
+// Used by the home page's pen-archive grid. Top N by archive_number.
+export async function fetchPens(limit?: number): Promise<PenRow[]> {
+  const supabase = await createSupabaseServerClient();
+  let q = supabase.from("pens").select("*").order("archive_number", { ascending: true });
+  if (limit != null) q = q.limit(limit);
+  const { data, error } = await q;
+  if (error) throw new Error(`fetchPens failed: ${error.message}`);
+  return data ?? [];
+}

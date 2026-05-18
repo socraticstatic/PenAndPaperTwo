@@ -36,6 +36,19 @@ export default function RootLayout({
         <script src="/prototype/image-slot.js" async={false}></script>
       </head>
       <body suppressHydrationWarning>
+        {/* Supabase config for the prototype's search.js (and any other
+            inline-loaded prototype script that needs to talk to the DB).
+            Plain JSON values inlined at SSR time — the publishable key is
+            already public per Supabase's anon-key model. */}
+        <script
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: `window.ppSupabaseConfig=${JSON.stringify({
+              url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+              anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+            })};`,
+          }}
+        />
         {children}
         {/* All scripts that mutate the prototype DOM run AFTER hydration. */}
         <PrototypeRuntime />

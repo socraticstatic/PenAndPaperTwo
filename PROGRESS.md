@@ -18,7 +18,8 @@ Two parallel numberings to avoid confusion:
 | **P3** | Extend dynamic backbone: papers + inks + pairings | ✅ done (2026-05-18) | 3 more tables + RLS + indexes. Seeded Tomoe River S, Iroshizuku Tsuki-yo, Pairing №047 (Custom 823 × Tomoe). `/paper`, `/ink-detail`, `/pairing` all DB-driven for hero region (crumb, H1, deck, eyebrow row, paper keyspecs). Acceptance test: edited paper `gsm` 52→68, reload propagated to eyebrow AND weight keyspec; reverted. Production build clean (4 dynamic routes, 2 static). |
 | **P4** | Kill structural hard-coding: refactor + dynamic routes | ✅ done (2026-05-18) | Shared `<EntityDetailPage>` collapses the 4-way boilerplate. JSONB shapes consolidated in `lib/supabase/jsonb-shapes.ts`. Per-entity `buildReplace` functions extracted to `lib/entities/<entity>-replace.tsx`. `database.types.ts` regenerated with full `Insert`/`Update`. New SSG routes `/pens/[id]`, `/papers/[id]`, `/pairings/[id]`, `/inks/[id]` use `generateStaticParams` over the build-time client. Old singular routes redirect at request time to the row with lowest `archive_number` — no hard-coded IDs anywhere. Production build clean: 4 SSG, 4 ƒ Dynamic legacy redirects, 2 Static. |
 | **P5** | Kill home + archive hard-coding + address P3 discoveries | ✅ done (2026-05-18) | Unified `PrototypeBody`+`EntityDetailPage` → one `<PrototypeShell>`. `/` archive grids (pens, papers, pairings) and `/ink` archive tiles all bind from Supabase — every prototype reference to Lamy 2000, Aurora 88, Sailor Pro Gear etc. is gone, replaced by rows in the DB. Grids render sparse (1 each) until more seeds. Policy decision: prototype's "Tomoe River" was a casual hard-coded sample; DB's accurate "Tomoe River S" wins on `/pairing` H1 and downstream. |
-| **P6** | (queued) Bind every attribute below the hero | 🟥 | 8 attribute cards on pens + papers, 6 on inks, 5-axis + measurements + conditions tables on pairings, recommended-marriages rails, writing-sample cards. Full progressive disclosure. |
+| **P6** | Seed real entities + research full attributes | ✅ done (2026-05-18) | Pilot 823 and Tomoe River S expanded to full schema (heritage, service, ergonomics, all spec groups). 7 more pens seeded with web-researched specs (Pelikan M800, Lamy 2000, Sailor Pro Gear Slim, Aurora 88, Platinum 3776 Century, TWSBI Diamond 580, Pilot Vanishing Point). 8 papers (added Rhodia №16, Midori MD, Clairefontaine Triomphe, Cosmo Air Light, Apica CD Premium, Crown Mill Pure Cotton Laid, Maruman Mnemosyne, Kokuyo Shoshikku). 3 more pairings (Lamy×Rhodia, Pelikan×Triomphe, Sailor×MD). Home grids now show 8/8/4. Ink left as Tsuki-yo (1 row) per directive. |
+| **P7** | (queued) Bind detail-page attribute cards below hero | 🟥 | The 8 attribute cards on pens + papers, the 6 on inks, the 5-axis + measurements + conditions tables on pairings. Pattern proven; mechanical work. |
 
 ### P2 design constraints
 
@@ -62,4 +63,4 @@ Two parallel numberings to avoid confusion:
 
 ---
 
-*Last updated: 2026-05-18 by P5 close-out (home + archive de-hardcoded, shell unified).*
+*Last updated: 2026-05-18 by P6 close-out (entities researched + seeded).*

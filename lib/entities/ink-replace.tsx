@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   type DOMNode,
   type HTMLReactParserOptions,
@@ -14,6 +15,7 @@ import { InkAttributeCards } from "./ink-attribute-cards";
 
 export function buildInkReplace(
   ink: InkRow,
+  totalInks = 0,
 ): HTMLReactParserOptions["replace"] {
   const performance = (ink.performance ?? {}) as InkPerformance;
   const pricing = (ink.pricing ?? {}) as Pricing;
@@ -27,6 +29,31 @@ export function buildInkReplace(
         <span className="crumb-mid">
           {formatArchive(ink.archive_number)} — {ink.model}
         </span>
+      );
+    }
+
+    if (node.name === "nav" && hasClass(node, "breadcrumb")) {
+      return (
+        <nav className="breadcrumb">
+          <span>
+            <Link href="/">Almanac</Link> &nbsp;·&nbsp;{" "}
+            <Link href="/ink">Ink Cupboard</Link> &nbsp;·&nbsp;{" "}
+            <span className="crumb-mid">
+              {formatArchive(ink.archive_number)} — {ink.model}
+            </span>
+          </span>
+          <span>
+            {ink.archive_number}
+            {totalInks > 0 ? ` / ${totalInks}` : ""} &nbsp;·&nbsp;{" "}
+            <a href="#" style={{ textDecoration: "underline" }}>
+              ← Prev
+            </a>{" "}
+            &nbsp;&nbsp;{" "}
+            <a href="#" style={{ textDecoration: "underline" }}>
+              Next →
+            </a>
+          </span>
+        </nav>
       );
     }
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   type DOMNode,
   type HTMLReactParserOptions,
@@ -33,6 +34,7 @@ function tendencyLabel(score: number): string {
 export function buildPaperReplace(
   p: PaperRow,
   pairings: PairingWithSides[] = [],
+  totalPapers = 0,
 ): HTMLReactParserOptions["replace"] {
   const substance = (p.substance ?? {}) as PaperSubstance;
   const surface = (p.surface ?? {}) as PaperSurface;
@@ -49,6 +51,31 @@ export function buildPaperReplace(
         <span className="crumb-mid">
           {formatArchive(p.archive_number)} — {p.model}
         </span>
+      );
+    }
+
+    if (node.name === "nav" && hasClass(node, "breadcrumb")) {
+      return (
+        <nav className="breadcrumb">
+          <span>
+            <Link href="/">Almanac</Link> &nbsp;·&nbsp;{" "}
+            <Link href="/#archive-papers">Paper Archive</Link> &nbsp;·&nbsp;{" "}
+            <span className="crumb-mid">
+              {formatArchive(p.archive_number)} — {p.model}
+            </span>
+          </span>
+          <span>
+            {p.archive_number}
+            {totalPapers > 0 ? ` / ${totalPapers}` : ""} &nbsp;·&nbsp;{" "}
+            <a href="#" style={{ textDecoration: "underline" }}>
+              ← Prev
+            </a>{" "}
+            &nbsp;&nbsp;{" "}
+            <a href="#" style={{ textDecoration: "underline" }}>
+              Next →
+            </a>
+          </span>
+        </nav>
       );
     }
 

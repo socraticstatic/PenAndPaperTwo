@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   type DOMNode,
   type HTMLReactParserOptions,
@@ -14,6 +15,7 @@ import {
 
 export function buildPairingReplace(
   pr: PairingWithSides,
+  totalPairings = 0,
 ): HTMLReactParserOptions["replace"] {
   const editorial = (pr.editorial ?? {}) as Editorial;
   const pen = pr.pen;
@@ -34,6 +36,32 @@ export function buildPairingReplace(
         <span className="crumb-mid">
           {formatArchive(pr.archive_number)} — {label}
         </span>
+      );
+    }
+
+    if (node.name === "nav" && hasClass(node, "breadcrumb")) {
+      const label = pen && paper ? `${pen.model} × ${paper.model}` : pr.id;
+      return (
+        <nav className="breadcrumb">
+          <span>
+            <Link href="/">Almanac</Link> &nbsp;·&nbsp;{" "}
+            <Link href="/#pairings">Pairing Archive</Link> &nbsp;·&nbsp;{" "}
+            <span className="crumb-mid">
+              {formatArchive(pr.archive_number)} — {label}
+            </span>
+          </span>
+          <span>
+            {pr.archive_number}
+            {totalPairings > 0 ? ` / ${totalPairings}` : ""} &nbsp;·&nbsp;{" "}
+            <a href="#" style={{ textDecoration: "underline" }}>
+              ← Prev
+            </a>{" "}
+            &nbsp;&nbsp;{" "}
+            <a href="#" style={{ textDecoration: "underline" }}>
+              Next →
+            </a>
+          </span>
+        </nav>
       );
     }
 

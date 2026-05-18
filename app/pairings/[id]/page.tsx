@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PrototypeShell } from "@/components/PrototypeShell";
 import { fetchPairingById, listPairingIds } from "@/lib/supabase/pairings";
+import { fetchEntityTotals } from "@/lib/supabase/site-meta";
 import { buildPairingReplace } from "@/lib/entities/pairing-replace";
 
 type Params = { id: string };
@@ -28,7 +29,10 @@ export default async function PairingDetailPage({
   params: Promise<Params>;
 }) {
   const { id } = await params;
-  const pairing = await fetchPairingById(id);
+  const [pairing, totals] = await Promise.all([
+    fetchPairingById(id),
+    fetchEntityTotals(),
+  ]);
   if (!pairing) {
     return (
       <main style={{ padding: "4rem 2rem", fontFamily: "monospace" }}>
@@ -42,7 +46,7 @@ export default async function PairingDetailPage({
   return (
     <PrototypeShell
       prototypeFile="pairing.html"
-      replace={buildPairingReplace(pairing)}
+      replace={buildPairingReplace(pairing, totals.pairings)}
     />
   );
 }

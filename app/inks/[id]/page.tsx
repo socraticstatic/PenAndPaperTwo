@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PrototypeShell } from "@/components/PrototypeShell";
 import { fetchInkById, listInkIds } from "@/lib/supabase/inks";
+import { fetchEntityTotals } from "@/lib/supabase/site-meta";
 import { buildInkReplace } from "@/lib/entities/ink-replace";
 
 type Params = { id: string };
@@ -27,7 +28,10 @@ export default async function InkDetailDynamicPage({
   params: Promise<Params>;
 }) {
   const { id } = await params;
-  const ink = await fetchInkById(id);
+  const [ink, totals] = await Promise.all([
+    fetchInkById(id),
+    fetchEntityTotals(),
+  ]);
   if (!ink) {
     return (
       <main style={{ padding: "4rem 2rem", fontFamily: "monospace" }}>
@@ -41,7 +45,7 @@ export default async function InkDetailDynamicPage({
   return (
     <PrototypeShell
       prototypeFile="ink-detail.html"
-      replace={buildInkReplace(ink)}
+      replace={buildInkReplace(ink, totals.inks)}
     />
   );
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   type DOMNode,
   type HTMLReactParserOptions,
@@ -20,6 +21,7 @@ import type { PairingWithSides } from "@/lib/supabase/pairings";
 export function buildPenReplace(
   pen: PenRow,
   pairings: PairingWithSides[] = [],
+  totalPens = 0,
 ): HTMLReactParserOptions["replace"] {
   const nib = (pen.nib ?? {}) as PenNib;
   const ink = (pen.ink_delivery ?? {}) as PenInkDelivery;
@@ -37,6 +39,34 @@ export function buildPenReplace(
         <span className="crumb-mid">
           {formatArchive(pen.archive_number)} — {pen.model}
         </span>
+      );
+    }
+
+    // Breadcrumb — replace the whole <nav class="breadcrumb"> so the
+    // "N / total" position indicator is live, not hard-coded. Falls
+    // back to a single archive marker if totalPens is unknown.
+    if (node.name === "nav" && hasClass(node, "breadcrumb")) {
+      return (
+        <nav className="breadcrumb">
+          <span>
+            <Link href="/">Almanac</Link> &nbsp;·&nbsp;{" "}
+            <Link href="/#archive-pens">Pen Archive</Link> &nbsp;·&nbsp;{" "}
+            <span className="crumb-mid">
+              {formatArchive(pen.archive_number)} — {pen.model}
+            </span>
+          </span>
+          <span>
+            {pen.archive_number}
+            {totalPens > 0 ? ` / ${totalPens}` : ""} &nbsp;·&nbsp;{" "}
+            <a href="#" style={{ textDecoration: "underline" }}>
+              ← Prev
+            </a>{" "}
+            &nbsp;&nbsp;{" "}
+            <a href="#" style={{ textDecoration: "underline" }}>
+              Next →
+            </a>
+          </span>
+        </nav>
       );
     }
 

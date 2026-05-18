@@ -51,7 +51,7 @@ function buildReplace(pen: PenRow): HTMLReactParserOptions["replace"] {
   const editorial = (pen.editorial ?? {}) as PenEditorial;
   const variant = splitVariant(pen.variant);
 
-  return (node: DOMNode) => {
+  function penReplace(node: DOMNode) {
     if (!(node instanceof Element)) return undefined;
 
     // ── Breadcrumb mid: `№ 003 — Custom 823`
@@ -143,7 +143,9 @@ function buildReplace(pen: PenRow): HTMLReactParserOptions["replace"] {
     }
 
     return undefined;
-  };
+  }
+
+  return penReplace;
 }
 
 export default async function PenPage() {

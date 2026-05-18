@@ -1,33 +1,34 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 /**
- * Re-runs each prototype page's inline `<script>` blocks after the parsed
- * markup is in the DOM. Inline content rendered through React doesn't
- * execute — we have to append fresh <script> nodes ourselves.
+ * Executes each prototype page's inline `<script>` blocks after React has
+ * placed the parsed markup in the DOM.
  *
- * A short delay lets the layout's external scripts (image-slot.js,
- * React UMD, Babel, tweaks-*.jsx, search.js) attach first, so the
- * inline code can rely on globals like `document.querySelectorAll` against
- * a hydrated DOM and on any custom-element registrations from image-slot.
+ * React 19 SSRs the contents of `<script>` elements but does NOT execute
+ * them on initial load — so we strip the inline blocks in `lib/prototype.ts`
+ * and materialise fresh `<script>` nodes here. Scripts appended to the DOM
+ * via JS DO execute in the browser.
+ *
+ * Re-entrancy: React StrictMode runs effects twice in dev. The captured
+ * scripts are IIFE-wrapped so re-execution can't re-declare top-level
+ * `const`. A useRef gate keeps each instance from doubling up listeners
+ * on a second StrictMode pass. We don't remove the appended `<script>`
+ * nodes in cleanup — they're inert once run, and the event listeners they
+ * registered live on the prototype DOM nodes (not on the script tag).
  */
 export function InlineScripts({ scripts }: { scripts: string[] }) {
+  const ranRef = useRef(false);
   useEffect(() => {
+    if (ranRef.current) return;
     if (!scripts.length) return;
-    const appended: HTMLScriptElement[] = [];
-    const handle = window.setTimeout(() => {
-      for (const code of scripts) {
-        const s = document.createElement("script");
-        s.textContent = code;
-        document.body.appendChild(s);
-        appended.push(s);
-      }
-    }, 50);
-    return () => {
-      window.clearTimeout(handle);
-      for (const s of appended) s.remove();
-    };
+    ranRef.current = true;
+    for (const code of scripts) {
+      const s = document.createElement("script");
+      s.textContent = code;
+      document.body.appendChild(s);
+    }
   }, [scripts]);
   return null;
 }

@@ -13,6 +13,7 @@ const PAGE_LINK_REWRITES: Array<[RegExp, string]> = [
 export type PrototypePage = {
   bodyHtml: string;
   inlineScripts: string[];
+  headStyles: string[];
   title: string;
 };
 
@@ -30,17 +31,35 @@ export async function loadPrototypePage(
         .trim()
     : "Pen & Paper";
 
+  // Per-page <style> blocks live in <head>. Extract them so they can be
+  // injected into the layout — without these the prototype's per-page
+  // layout rules (breadcrumb, pp-card, .meas-table etc.) are missing.
+  const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+  const headStyles: string[] = [];
+  if (headMatch) {
+    const styleRe = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = styleRe.exec(headMatch[1])) !== null) {
+      headStyles.push(m[1]);
+    }
+  }
+
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
   if (!bodyMatch) throw new Error(`No <body> in ${htmlFile}`);
   let bodyHtml = bodyMatch[1];
 
-  // Strip and capture inline scripts so we can re-run them after hydration.
+  // Extract inline scripts. React 19 SSRs `<script>` content but doesn't
+  // execute it on initial load, so we strip the inline blocks out of the
+  // markup and run them client-side via the InlineScripts component, which
+  // appends fresh <script> nodes via JS (those DO execute).
+  // Each block is IIFE-wrapped so dev-mode StrictMode double-mounts can't
+  // re-declare top-level `const pickerWords = …` etc.
   const inlineScripts: string[] = [];
   bodyHtml = bodyHtml.replace(
     /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi,
-    (_m, code) => {
-      const trimmed = String(code).trim();
-      if (trimmed) inlineScripts.push(trimmed);
+    (_m, code: string) => {
+      const trimmed = code.trim();
+      if (trimmed) inlineScripts.push(`(function(){\n${trimmed}\n})();`);
       return "";
     },
   );
@@ -48,6 +67,16 @@ export async function loadPrototypePage(
   // Strip external script tags — the layout loads them once globally
   // (image-slot.js, React UMD, Babel, tweaks-*.jsx, search.js).
   bodyHtml = bodyHtml.replace(/<script[^>]*\bsrc=[^>]*><\/script>/gi, "");
+
+  // Prototype defect: `pairing.html` puts an inner `<a href="…">→</a>`
+  // inside an outer `<a class="pp-card">…</a>` card — invalid nesting that
+  // browsers auto-fix but React 19 SSR flags as a hydration error. The
+  // outer card already routes to the same target, so the inner anchor is
+  // redundant; collapse it to a span.
+  bodyHtml = bodyHtml.replace(
+    /<a\s+href="[^"]*"[^>]*>(\s*[→↦›»])\s*<\/a>/g,
+    "<span>$1</span>",
+  );
 
   // Rewrite cross-page links to Next.js routes.
   for (const [pattern, replacement] of PAGE_LINK_REWRITES) {
@@ -65,5 +94,5 @@ export async function loadPrototypePage(
     },
   );
 
-  return { bodyHtml, inlineScripts, title };
+  return { bodyHtml, inlineScripts, headStyles, title };
 }

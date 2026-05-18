@@ -1,0 +1,5 @@
+allowBuilds:
+  # Native resolver. We skip it deliberately — the Windows compile costs
+  # 5–15 min and the dev/build path runs fine without it. See
+  # ~/.claude/memory/feedback_node_project_setup.md.
+  unrs-resolver: false

@@ -62,7 +62,12 @@ Open `http://localhost:3000`.
 
 ## Roadmap
 
-The design bundle's `design-source/project/CLAUDE.md` is the authoritative wire-up guide. The phases below mirror its Part II.
+See [PROGRESS.md](PROGRESS.md) for current state. We track two parallel numberings:
+
+- **D-phases (D1–D12)** — the wire-up steps from the design's [`design-source/project/CLAUDE.md`](design-source/project/CLAUDE.md).
+- **P-phases (P1–P∞)** — work chunks we define ourselves; may span or skip D-phases.
+
+The phases below mirror the design's Part II (the D-phases).
 
 1. **Supabase schema** — `pens`, `papers`, `pairings`, `inks`, `pairing_axes`, `images`. Migrations live in `supabase/migrations/`. Seed from `design-source/project/CLAUDE.md` §III enums.
 2. **Image pipeline** — every product photo is a transparent PNG. Store in Supabase Storage bucket `assets/`, swap `<image-slot>` for `<Image>` per page.
@@ -78,5 +83,4 @@ The design bundle's `design-source/project/CLAUDE.md` is the authoritative wire-
 
 ## Related
 
-- Predecessor: [`socraticstatic/pen-and-paper`](https://github.com/socraticstatic/pen-and-paper) (v1, separate codebase)
 - Design bundle source: Claude Design link `wJF0gQyYrJjPZ8cZrBe6vA`

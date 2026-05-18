@@ -75,6 +75,13 @@ export function buildInkReplace(
       return <InkAttributeCards ink={ink} />;
     }
 
+    // Writing-sample cards. The ink's relationship to specific papers
+    // would need an `ink_paper_observation` table we don't yet model.
+    // Render empty (no fake substitutes) until that engine exists.
+    if (node.name === "div" && hasClass(node, "samples-grid")) {
+      return <div className="samples-grid" />;
+    }
+
     return undefined;
   }
 

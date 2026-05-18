@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PrototypeShell } from "@/components/PrototypeShell";
 import { fetchPenById, listPenIds } from "@/lib/supabase/pens";
+import { fetchPairingsForPen } from "@/lib/supabase/pairings";
 import { buildPenReplace } from "@/lib/entities/pen-replace";
 
 type Params = { id: string };
@@ -27,7 +28,10 @@ export default async function PenDetailPage({
   params: Promise<Params>;
 }) {
   const { id } = await params;
-  const pen = await fetchPenById(id);
+  const [pen, pairings] = await Promise.all([
+    fetchPenById(id),
+    fetchPairingsForPen(id, 3),
+  ]);
   if (!pen) {
     return (
       <main style={{ padding: "4rem 2rem", fontFamily: "monospace" }}>
@@ -38,5 +42,10 @@ export default async function PenDetailPage({
       </main>
     );
   }
-  return <PrototypeShell prototypeFile="pen.html" replace={buildPenReplace(pen)} />;
+  return (
+    <PrototypeShell
+      prototypeFile="pen.html"
+      replace={buildPenReplace(pen, pairings)}
+    />
+  );
 }

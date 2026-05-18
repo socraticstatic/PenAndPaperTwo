@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PrototypeShell } from "@/components/PrototypeShell";
 import { fetchPaperById, listPaperIds } from "@/lib/supabase/papers";
+import { fetchPairingsForPaper } from "@/lib/supabase/pairings";
 import { buildPaperReplace } from "@/lib/entities/paper-replace";
 
 type Params = { id: string };
@@ -25,7 +26,10 @@ export default async function PaperDetailPage({
   params: Promise<Params>;
 }) {
   const { id } = await params;
-  const paper = await fetchPaperById(id);
+  const [paper, pairings] = await Promise.all([
+    fetchPaperById(id),
+    fetchPairingsForPaper(id, 3),
+  ]);
   if (!paper) {
     return (
       <main style={{ padding: "4rem 2rem", fontFamily: "monospace" }}>
@@ -36,5 +40,10 @@ export default async function PaperDetailPage({
       </main>
     );
   }
-  return <PrototypeShell prototypeFile="paper.html" replace={buildPaperReplace(paper)} />;
+  return (
+    <PrototypeShell
+      prototypeFile="paper.html"
+      replace={buildPaperReplace(paper, pairings)}
+    />
+  );
 }

@@ -14,9 +14,12 @@ import type {
 } from "@/lib/supabase/jsonb-shapes";
 import { formatArchive, hasClass, splitVariant } from "./format";
 import { PenAttributeCards } from "./pen-attribute-cards";
+import { WritingSamples } from "./writing-samples";
+import type { PairingWithSides } from "@/lib/supabase/pairings";
 
 export function buildPenReplace(
   pen: PenRow,
+  pairings: PairingWithSides[] = [],
 ): HTMLReactParserOptions["replace"] {
   const nib = (pen.nib ?? {}) as PenNib;
   const ink = (pen.ink_delivery ?? {}) as PenInkDelivery;
@@ -67,6 +70,11 @@ export function buildPenReplace(
     // Full 8-card attribute grid below the hero
     if (node.name === "div" && hasClass(node, "attr-groups")) {
       return <PenAttributeCards pen={pen} />;
+    }
+
+    // Writing-sample cards — real pairings featuring this pen.
+    if (node.name === "div" && hasClass(node, "samples-grid")) {
+      return <WritingSamples pairings={pairings} side="pen" />;
     }
 
     if (node.name === "div" && hasClass(node, "keyspecs")) {

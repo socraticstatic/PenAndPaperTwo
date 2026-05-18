@@ -14,6 +14,8 @@ import type {
 } from "@/lib/supabase/jsonb-shapes";
 import { formatArchive, hasClass } from "./format";
 import { PaperAttributeCards } from "./paper-attribute-cards";
+import { WritingSamples } from "./writing-samples";
+import type { PairingWithSides } from "@/lib/supabase/pairings";
 
 function sheenLabel(score: number): string {
   return (
@@ -30,6 +32,7 @@ function tendencyLabel(score: number): string {
 
 export function buildPaperReplace(
   p: PaperRow,
+  pairings: PairingWithSides[] = [],
 ): HTMLReactParserOptions["replace"] {
   const substance = (p.substance ?? {}) as PaperSubstance;
   const surface = (p.surface ?? {}) as PaperSurface;
@@ -109,6 +112,11 @@ export function buildPaperReplace(
     // Full 8-card attribute grid below the hero
     if (node.name === "div" && hasClass(node, "attr-groups")) {
       return <PaperAttributeCards paper={p} />;
+    }
+
+    // Writing-sample cards — real pairings featuring this paper.
+    if (node.name === "div" && hasClass(node, "samples-grid")) {
+      return <WritingSamples pairings={pairings} side="paper" />;
     }
 
     if (node.name === "div" && hasClass(node, "keyspecs")) {

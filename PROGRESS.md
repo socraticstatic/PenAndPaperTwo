@@ -20,6 +20,10 @@ Two parallel numberings to avoid confusion:
 | **P5** | Kill home + archive hard-coding + address P3 discoveries | ✅ done (2026-05-18) | Unified `PrototypeBody`+`EntityDetailPage` → one `<PrototypeShell>`. `/` archive grids (pens, papers, pairings) and `/ink` archive tiles all bind from Supabase — every prototype reference to Lamy 2000, Aurora 88, Sailor Pro Gear etc. is gone, replaced by rows in the DB. Grids render sparse (1 each) until more seeds. Policy decision: prototype's "Tomoe River" was a casual hard-coded sample; DB's accurate "Tomoe River S" wins on `/pairing` H1 and downstream. |
 | **P6** | Seed real entities + research full attributes | ✅ done (2026-05-18) | Pilot 823 and Tomoe River S expanded to full schema (heritage, service, ergonomics, all spec groups). 7 more pens seeded with web-researched specs (Pelikan M800, Lamy 2000, Sailor Pro Gear Slim, Aurora 88, Platinum 3776 Century, TWSBI Diamond 580, Pilot Vanishing Point). 8 papers (added Rhodia №16, Midori MD, Clairefontaine Triomphe, Cosmo Air Light, Apica CD Premium, Crown Mill Pure Cotton Laid, Maruman Mnemosyne, Kokuyo Shoshikku). 3 more pairings (Lamy×Rhodia, Pelikan×Triomphe, Sailor×MD). Home grids now show 8/8/4. Ink left as Tsuki-yo (1 row) per directive. |
 | **P7** | Bind detail-page attribute cards below hero | ✅ done (2026-05-18) | All 8 pen cards, all 8 paper cards, all 6 ink cards, and pairing's 5-axis breakdown + measurements + conditions tables now bind from the row JSONB. Progressive disclosure: empty rows / empty cards hidden. New modules: `lib/entities/pen-attribute-cards.tsx`, `paper-attribute-cards.tsx`, `ink-attribute-cards.tsx`, `pairing-extras.tsx`. Pairing uses a counter closure to distinguish the two `<table class="meas-table">` elements (first → measurements, second → conditions). |
+| **P8** | Eliminate remaining hard-coding on home + detail pages | ✅ done (2026-05-18) | Pairing-of-the-week hero bound to `is_pairing_of_week=true`. `site_meta` key/value table seeded for masthead chrome (Volume, season, tagline, editors). "N Entries" line computed from row totals. Topbar meta bound. Writing-sample cards on /pens/[id] + /papers/[id] bind to actual pairings featuring that entity. Comparison tray + picker result list rendered in honest empty states — NO fake substitutes. |
+| **P9** | Real Search engine | 🟧 starting | DB-backed full-text + fuzzy match across pens/papers/pairings/inks. Replace prototype's hard-coded catalog. Scales to thousands of rows. |
+| **P10** | Real Compare engine | 🟥 queued | State + persistence + side-by-side grid. |
+| **P11** | Real Sommelier picker engine | 🟥 queued | 5-axis Euclidean match RPC. |
 
 ### P2 design constraints
 
@@ -63,4 +67,4 @@ Two parallel numberings to avoid confusion:
 
 ---
 
-*Last updated: 2026-05-18 by P7 close-out (every attribute below the hero is now DB-driven).*
+*Last updated: 2026-05-18 by P8 close-out (zero hard-coded entity references; engines roadmapped).*

@@ -201,13 +201,250 @@ function pairingTile(pr: PairingWithSides) {
   );
 }
 
+// ─── Featured "Pairing of the week" hero ───────────────────────
+function FeaturedPairing({ pr }: { pr: PairingWithSides | null }) {
+  if (!pr || !pr.pen || !pr.paper) {
+    // Honest empty state. The editor hasn't flagged a pairing this week.
+    return (
+      <section className="featured">
+        <div className="wrap">
+          <div className="featured-eyebrow mono">
+            <span>No pairing selected this week</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  const editorial = (pr.editorial ?? {}) as Editorial;
+  const measurements = pr.measurements as Record<string, unknown> | null;
+  return (
+    <section className="featured">
+      <div className="wrap">
+        <div className="featured-eyebrow mono">
+          <span>Pairing of the Week — {formatArchive(pr.archive_number)}</span>
+          <span>Selected by the Editors</span>
+          {pr.updated_at ? (
+            <span>Updated {pr.updated_at.slice(0, 10)}</span>
+          ) : null}
+        </div>
+
+        <div className="featured-grid">
+          <div className="featured-pen slot-frame">
+            <span className="placeholder-corner">PEN</span>
+          </div>
+
+          <div className="featured-center">
+            <div>
+              <span className="featured-no">
+                PAIRING {formatArchive(pr.archive_number)} ·{" "}
+                {pr.is_editors_choice
+                  ? "EDITOR’S CHOICE"
+                  : (pr.mood?.[0] ?? "MARRIAGE").toUpperCase()}
+              </span>
+              <h2 className="featured-title">
+                {pr.pen.model}
+                <br />
+                <em>×</em>
+                <br />
+                {pr.paper.model}
+              </h2>
+              {editorial.deck ? (
+                <p className="featured-sub">{editorial.deck}</p>
+              ) : null}
+              {editorial.tastingNote ? (
+                <p className="featured-body">{editorial.tastingNote}</p>
+              ) : null}
+            </div>
+
+            <div className="featured-meta">
+              <div className="meta-row">
+                <span className="meta-k">Affinity</span>
+                <span className="meta-v">{pr.affinity_score} / 100</span>
+              </div>
+              <div className="meta-row">
+                <span className="meta-k">Use</span>
+                <span className="meta-v">{pr.use_case}</span>
+              </div>
+              {pr.mood?.[0] ? (
+                <div className="meta-row">
+                  <span className="meta-k">Mood</span>
+                  <span className="meta-v">{pr.mood[0]}</span>
+                </div>
+              ) : null}
+              {measurements && typeof measurements.sheenObserved === "string" ? (
+                <div className="meta-row">
+                  <span className="meta-k">Sheen</span>
+                  <span className="meta-v">
+                    {measurements.sheenObserved as string}
+                  </span>
+                </div>
+              ) : null}
+            </div>
+
+            <a href={`/pairings/${pr.id}`} className="featured-link">
+              Read the pairing in full →
+            </a>
+          </div>
+
+          <div className="featured-paper slot-frame">
+            <span className="placeholder-corner">PAPER</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Comparison tray (empty state) ─────────────────────────────
+// Renders 4 empty slots. NOT fake-populated. The real compare engine
+// (state, add/remove, persist) lives in the roadmap, not here.
+function ComparisonTrayEmpty() {
+  return (
+    <div className="tray" id="tray">
+      <div className="tray-handle" id="tray-handle">
+        <span className="h-eyebrow">Comparison flight</span>
+        <span className="h-title">
+          0 <em>of 4</em> specimens
+        </span>
+      </div>
+      <div className="tray-slots">
+        {["i.", "ii.", "iii.", "iv."].map((n) => (
+          <div className="tray-slot empty" key={n}>
+            <span className="tray-num">{n}</span>
+            <span className="ts-plus">+</span>
+            <div>
+              <div className="ts-name">Add a specimen</div>
+              <span className="ts-sub">Pen or paper</span>
+            </div>
+            <span></span>
+          </div>
+        ))}
+      </div>
+      <div className="tray-actions">
+        <a href="#compare" className="primary">Open compare →</a>
+      </div>
+    </div>
+  );
+}
+
 export function buildHomeReplace(data: {
   pens: PenRow[];
   papers: PaperRow[];
   pairings: PairingWithSides[];
+  pairingOfWeek: PairingWithSides | null;
+  siteMeta: Record<string, string>;
+  totals: { total: number };
 }): HTMLReactParserOptions["replace"] {
   function homeReplace(node: DOMNode) {
     if (!(node instanceof Element)) return undefined;
+
+    // ─── Topbar meta ─────────────────────────────────────────
+    if (node.name === "div" && hasClass(node, "topbar-meta")) {
+      return (
+        <div className="topbar-meta">
+          {data.siteMeta.topbar_volume_label ? (
+            <span>
+              <span className="dot"></span>
+              {data.siteMeta.topbar_volume_label}
+            </span>
+          ) : null}
+          {data.siteMeta.topbar_tagline ? (
+            <span>{data.siteMeta.topbar_tagline}</span>
+          ) : null}
+          <span>Search ⌘K</span>
+        </div>
+      );
+    }
+
+    // ─── Masthead issue line + tagline block ─────────────────
+    if (node.name === "div" && hasClass(node, "masthead-issue")) {
+      const totalLabel =
+        data.totals.total > 0 ? `${data.totals.total} Entries` : null;
+      return (
+        <div className="masthead-issue">
+          {data.siteMeta.masthead_volume_no ? (
+            <span className="mono">{data.siteMeta.masthead_volume_no}</span>
+          ) : null}
+          {data.siteMeta.masthead_issue_date ? (
+            <span className="mono">{data.siteMeta.masthead_issue_date}</span>
+          ) : null}
+          {data.siteMeta.masthead_tagline ? (
+            <span className="mono">{data.siteMeta.masthead_tagline}</span>
+          ) : null}
+          {totalLabel ? <span className="mono">{totalLabel}</span> : null}
+          {data.siteMeta.masthead_editors ? (
+            <span className="mono">{data.siteMeta.masthead_editors}</span>
+          ) : null}
+        </div>
+      );
+    }
+
+    if (node.name === "div" && hasClass(node, "masthead-tag")) {
+      const skipId = data.pairingOfWeek?.id;
+      return (
+        <div className="masthead-tag">
+          {data.siteMeta.masthead_tag_mono ? (
+            <span
+              className="mono"
+              dangerouslySetInnerHTML={{
+                __html: data.siteMeta.masthead_tag_mono.replace(/\n/g, "<br>"),
+              }}
+            />
+          ) : null}
+          {data.siteMeta.masthead_tag_lede ? (
+            <p className="lede">{data.siteMeta.masthead_tag_lede}</p>
+          ) : null}
+          <span className="mono" style={{ textAlign: "right" }}>
+            Begin below ↓<br />
+            {skipId ? (
+              <>
+                Or skip to{" "}
+                <a
+                  href={`/pairings/${skipId}`}
+                  style={{ textDecoration: "underline" }}
+                >
+                  No.{" "}
+                  {String(data.pairingOfWeek!.archive_number).padStart(2, "0")}{" "}
+                  →
+                </a>
+              </>
+            ) : null}
+          </span>
+        </div>
+      );
+    }
+
+    // ─── Featured pairing-of-the-week section ────────────────
+    if (node.name === "section" && hasClass(node, "featured")) {
+      return <FeaturedPairing pr={data.pairingOfWeek} />;
+    }
+
+    // ─── Sticky comparison tray (empty state) ────────────────
+    if (
+      node.name === "div" &&
+      node.attribs.id === "tray" &&
+      hasClass(node, "tray")
+    ) {
+      return <ComparisonTrayEmpty />;
+    }
+
+    // ─── Picker result list (engine not yet wired) ───────────
+    // The real engine = 5-axis Euclidean match RPC over `pairings`.
+    // Until that exists, render the head + an empty body — never
+    // the prototype's three hard-coded sample results.
+    if (node.name === "aside" && hasClass(node, "picker-results")) {
+      return (
+        <aside className="picker-results">
+          <div className="picker-results-head">
+            <span className="pr-eyebrow">Matches</span>
+            <div className="pr-count">
+              <em data-out="count">—</em> marriages match
+            </div>
+            <span className="pr-meta">Engine not yet wired</span>
+          </div>
+        </aside>
+      );
+    }
 
     // The two `<div class="archive-grid">` blocks both have the same
     // class; disambiguate by enclosing section id.

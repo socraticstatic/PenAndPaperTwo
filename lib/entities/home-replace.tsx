@@ -17,6 +17,12 @@ import type {
   Pricing,
 } from "@/lib/supabase/jsonb-shapes";
 import { formatArchive, hasClass } from "./format";
+import {
+  copy,
+  numberToWords,
+  ucfirst,
+  type CopyMap,
+} from "@/lib/supabase/page-copy";
 
 // Find the enclosing <section id="…"> by walking up parents. html-
 // react-parser exposes parent links on the parsed DOM, so we can
@@ -333,8 +339,43 @@ export function buildHomeReplace(data: {
   pairings: PairingWithSides[];
   pairingOfWeek: PairingWithSides | null;
   siteMeta: Record<string, string>;
-  totals: { total: number };
+  totals: { pens: number; papers: number; pairings: number; inks: number; total: number };
+  pageCopy: CopyMap;
 }): HTMLReactParserOptions["replace"] {
+  const vars = {
+    pen_count: data.totals.pens,
+    paper_count: data.totals.papers,
+    pairing_count: data.totals.pairings,
+    ink_count: data.totals.inks,
+    pen_count_words: ucfirst(numberToWords(data.totals.pens)),
+    paper_count_words: ucfirst(numberToWords(data.totals.papers)),
+    pairing_count_words: ucfirst(numberToWords(data.totals.pairings)),
+    ink_count_words: ucfirst(numberToWords(data.totals.inks)),
+    pairing_of_week_label: data.pairingOfWeek
+      ? formatArchive(data.pairingOfWeek.archive_number)
+      : "",
+    pairing_of_week_archive: data.pairingOfWeek
+      ? String(data.pairingOfWeek.archive_number).padStart(2, "0")
+      : "",
+  };
+
+  // Render the editorial "Title <em>accent</em> rest." pattern from
+  // a single template string by isolating the italic-emphasised word.
+  // The DB stores plain text; we wrap whatever sits between the
+  // dot/comma boundaries as the emphasised noun. For consistency with
+  // the prototype, we italicise the last word before the comma.
+  function renderTitleWithEmphasis(text: string, emphasisWord: string) {
+    const idx = text.toLowerCase().indexOf(emphasisWord.toLowerCase());
+    if (idx < 0) return text;
+    return (
+      <>
+        {text.slice(0, idx)}
+        <em>{text.slice(idx, idx + emphasisWord.length)}</em>
+        {text.slice(idx + emphasisWord.length)}
+      </>
+    );
+  }
+
   function homeReplace(node: DOMNode) {
     if (!(node instanceof Element)) return undefined;
 
@@ -412,6 +453,99 @@ export function buildHomeReplace(data: {
           </span>
         </div>
       );
+    }
+
+    // ─── Section heads (driven by page_copy) ──────────────────
+    // Every <div class="section-head"> on home looks up its strings
+    // from page_copy under home.<section_id>.{section_no,title_words,
+    // kicker}. Keys use underscores; section ids use hyphens — we
+    // normalize on lookup.
+    if (node.name === "div" && hasClass(node, "section-head")) {
+      const secRaw = enclosingSectionId(node);
+      const sec = secRaw?.replace(/-/g, "_") ?? "";
+      if (sec) {
+        const titleTemplate = copy(data.pageCopy, `home.${sec}.title_words`, vars) ||
+                              copy(data.pageCopy, `home.${sec}.title`, vars);
+        const sectionNo = copy(data.pageCopy, `home.${sec}.section_no`, vars);
+        const kicker = copy(data.pageCopy, `home.${sec}.kicker`, vars);
+        // Find the emphasis word — the noun in the title that the
+        // prototype italicises (pens / papers / marriages / etc.).
+        const emphasisWord =
+          sec === "archive_pens" ? "pens"
+          : sec === "archive_papers" ? "papers"
+          : sec === "pairings" ? "marriages"
+          : sec === "picker" ? "mood"
+          : sec === "principles" ? "meets"
+          : sec === "compare" ? "weighed"
+          : "";
+        if (sectionNo || titleTemplate || kicker) {
+          return (
+            <div className="section-head">
+              {sectionNo ? <span className="section-no">{sectionNo}</span> : null}
+              {titleTemplate ? (
+                <h2 className="section-title">
+                  {emphasisWord
+                    ? renderTitleWithEmphasis(titleTemplate, emphasisWord)
+                    : titleTemplate}
+                </h2>
+              ) : null}
+              {kicker ? <span className="section-kicker">{kicker}</span> : null}
+            </div>
+          );
+        }
+      }
+    }
+
+    // ─── Principles cards (5 fixed editorial cards) ──────────
+    // Find this principle-card's index among its siblings and look up
+    // the body copy. Principle titles ("Wetness × Absorbency") use the
+    // class `principle-axis` in the prototype — italicising the × is
+    // handled via title.replace; the editor writes the title with a
+    // plain "×".
+    function principleIndex(cardEl: Element): number {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const container: any = (cardEl as unknown as { parent?: unknown }).parent;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const siblings = ((container?.children ?? []) as any[]).filter(
+        (c) => c instanceof Element && (c as Element).attribs?.class?.includes("principle-card"),
+      );
+      return siblings.indexOf(cardEl as unknown as never);
+    }
+
+    function renderPrincipleTitle(text: string) {
+      const parts = text.split("×");
+      if (parts.length < 2) return <>{text}</>;
+      return (
+        <>
+          {parts[0]}
+          <em>×</em>
+          {parts.slice(1).join("×")}
+        </>
+      );
+    }
+
+    if (node.name === "h3" && hasClass(node, "principle-axis")) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cardParent: any = (node as Element).parent;
+      if (cardParent instanceof Element) {
+        const idx = principleIndex(cardParent);
+        if (idx >= 0) {
+          const value = copy(data.pageCopy, `home.principles.p${idx + 1}.title`, vars);
+          if (value) return <h3 className="principle-axis">{renderPrincipleTitle(value)}</h3>;
+        }
+      }
+    }
+
+    if (node.name === "p" && hasClass(node, "principle-body")) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cardParent: any = (node as Element).parent;
+      if (cardParent instanceof Element) {
+        const idx = principleIndex(cardParent);
+        if (idx >= 0) {
+          const value = copy(data.pageCopy, `home.principles.p${idx + 1}.body`, vars);
+          if (value) return <p className="principle-body">{value}</p>;
+        }
+      }
     }
 
     // ─── Featured pairing-of-the-week section ────────────────

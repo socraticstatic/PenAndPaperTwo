@@ -13,6 +13,7 @@ import type {
   Pricing,
 } from "@/lib/supabase/jsonb-shapes";
 import { formatArchive, hasClass } from "./format";
+import { PaperAttributeCards } from "./paper-attribute-cards";
 
 function sheenLabel(score: number): string {
   return (
@@ -103,6 +104,11 @@ export function buildPaperReplace(
           ) : null}
         </div>
       );
+    }
+
+    // Full 8-card attribute grid below the hero
+    if (node.name === "div" && hasClass(node, "attr-groups")) {
+      return <PaperAttributeCards paper={p} />;
     }
 
     if (node.name === "div" && hasClass(node, "keyspecs")) {

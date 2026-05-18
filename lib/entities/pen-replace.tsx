@@ -13,6 +13,7 @@ import type {
   Pricing,
 } from "@/lib/supabase/jsonb-shapes";
 import { formatArchive, hasClass, splitVariant } from "./format";
+import { PenAttributeCards } from "./pen-attribute-cards";
 
 export function buildPenReplace(
   pen: PenRow,
@@ -61,6 +62,11 @@ export function buildPenReplace(
           {price ? <span>{price}</span> : null}
         </div>
       );
+    }
+
+    // Full 8-card attribute grid below the hero
+    if (node.name === "div" && hasClass(node, "attr-groups")) {
+      return <PenAttributeCards pen={pen} />;
     }
 
     if (node.name === "div" && hasClass(node, "keyspecs")) {

@@ -10,6 +10,7 @@ import type {
   Pricing,
 } from "@/lib/supabase/jsonb-shapes";
 import { formatArchive, hasClass } from "./format";
+import { InkAttributeCards } from "./ink-attribute-cards";
 
 export function buildInkReplace(
   ink: InkRow,
@@ -67,6 +68,11 @@ export function buildInkReplace(
           {price ? <span>{price}</span> : null}
         </div>
       );
+    }
+
+    // Full 6-card attribute grid below the hero
+    if (node.name === "div" && hasClass(node, "attr-groups")) {
+      return <InkAttributeCards ink={ink} />;
     }
 
     return undefined;

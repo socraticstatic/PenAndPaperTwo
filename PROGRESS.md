@@ -19,7 +19,7 @@ Two parallel numberings to avoid confusion:
 | **P4** | Kill structural hard-coding: refactor + dynamic routes | ✅ done (2026-05-18) | Shared `<EntityDetailPage>` collapses the 4-way boilerplate. JSONB shapes consolidated in `lib/supabase/jsonb-shapes.ts`. Per-entity `buildReplace` functions extracted to `lib/entities/<entity>-replace.tsx`. `database.types.ts` regenerated with full `Insert`/`Update`. New SSG routes `/pens/[id]`, `/papers/[id]`, `/pairings/[id]`, `/inks/[id]` use `generateStaticParams` over the build-time client. Old singular routes redirect at request time to the row with lowest `archive_number` — no hard-coded IDs anywhere. Production build clean: 4 SSG, 4 ƒ Dynamic legacy redirects, 2 Static. |
 | **P5** | Kill home + archive hard-coding + address P3 discoveries | ✅ done (2026-05-18) | Unified `PrototypeBody`+`EntityDetailPage` → one `<PrototypeShell>`. `/` archive grids (pens, papers, pairings) and `/ink` archive tiles all bind from Supabase — every prototype reference to Lamy 2000, Aurora 88, Sailor Pro Gear etc. is gone, replaced by rows in the DB. Grids render sparse (1 each) until more seeds. Policy decision: prototype's "Tomoe River" was a casual hard-coded sample; DB's accurate "Tomoe River S" wins on `/pairing` H1 and downstream. |
 | **P6** | Seed real entities + research full attributes | ✅ done (2026-05-18) | Pilot 823 and Tomoe River S expanded to full schema (heritage, service, ergonomics, all spec groups). 7 more pens seeded with web-researched specs (Pelikan M800, Lamy 2000, Sailor Pro Gear Slim, Aurora 88, Platinum 3776 Century, TWSBI Diamond 580, Pilot Vanishing Point). 8 papers (added Rhodia №16, Midori MD, Clairefontaine Triomphe, Cosmo Air Light, Apica CD Premium, Crown Mill Pure Cotton Laid, Maruman Mnemosyne, Kokuyo Shoshikku). 3 more pairings (Lamy×Rhodia, Pelikan×Triomphe, Sailor×MD). Home grids now show 8/8/4. Ink left as Tsuki-yo (1 row) per directive. |
-| **P7** | (queued) Bind detail-page attribute cards below hero | 🟥 | The 8 attribute cards on pens + papers, the 6 on inks, the 5-axis + measurements + conditions tables on pairings. Pattern proven; mechanical work. |
+| **P7** | Bind detail-page attribute cards below hero | ✅ done (2026-05-18) | All 8 pen cards, all 8 paper cards, all 6 ink cards, and pairing's 5-axis breakdown + measurements + conditions tables now bind from the row JSONB. Progressive disclosure: empty rows / empty cards hidden. New modules: `lib/entities/pen-attribute-cards.tsx`, `paper-attribute-cards.tsx`, `ink-attribute-cards.tsx`, `pairing-extras.tsx`. Pairing uses a counter closure to distinguish the two `<table class="meas-table">` elements (first → measurements, second → conditions). |
 
 ### P2 design constraints
 
@@ -40,7 +40,7 @@ Two parallel numberings to avoid confusion:
 | D4 | Facet + Sommelier RPC functions | 🟥 | — |
 | D5 | Storage bucket `media` for transparent PNGs | 🟥 | — |
 | D6 | Seed initial data SQL | 🟧 partial | P2 + P3 seeded 4 rows total — one per entity (Custom 823, Tomoe River S, Tsuki-yo, the 823×Tomoe pairing). Full archive seeding TBD. |
-| D7 | Replace sample HTML, page by page (D7.1 index … D7.6 ink-detail) | 🟧 partial | P2 + P3 — D7.2/D7.3/D7.4/D7.6 are DB-driven for hero regions. D7.1 (`/`) and D7.5 (`/ink` archive grid) still render prototype HTML verbatim. Detail pages below the hero are still hard-coded prototype markup — the binding pattern is proven; extending it down each page is mechanical. |
+| D7 | Replace sample HTML, page by page (D7.1 index … D7.6 ink-detail) | ✅ done (substantially) | All 6 prototype pages now bind from DB: home grids (P5), archive grids (P5), detail-page heroes (P2+P3), detail-page attribute cards (P7). Remaining hard-coded chrome: home pairing-of-the-week hero, sticky comparison tray, masthead numbers — editorial structure, not entity data. |
 | D8 | Wire the Sommelier picker (`/api/picker`) | 🟥 | — |
 | D9 | Wire Compare drawer (`/api/compare`) | 🟥 | — |
 | D10 | Search & recently viewed (Supabase index + localStorage) | 🟥 | — |
@@ -63,4 +63,4 @@ Two parallel numberings to avoid confusion:
 
 ---
 
-*Last updated: 2026-05-18 by P6 close-out (entities researched + seeded).*
+*Last updated: 2026-05-18 by P7 close-out (every attribute below the hero is now DB-driven).*

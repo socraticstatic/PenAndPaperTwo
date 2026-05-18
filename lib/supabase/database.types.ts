@@ -3,7 +3,8 @@
 //
 //   mcp__supabase__generate_typescript_types(project_id="gmmwypnlqjqcezwxzbiw")
 //
-// Do not hand-edit. Commit changes alongside the migration that produced them.
+// Do not hand-edit. The Insert/Update types must stay populated so future
+// write paths get full type safety. Commit alongside the producing migration.
 
 export type Json =
   | string
@@ -14,7 +15,9 @@ export type Json =
   | Json[]
 
 export type Database = {
-  __InternalSupabase: { PostgrestVersion: "14.5" }
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
       inks: {
@@ -45,8 +48,60 @@ export type Database = {
           warmth: string
           year_introduced: number | null
         }
-        Insert: Record<string, unknown>
-        Update: Record<string, unknown>
+        Insert: {
+          affinity_scores?: Json | null
+          archive_number: number
+          brand: string
+          chemistry?: Json | null
+          color: Json
+          country_of_origin: string
+          created_at?: string | null
+          editorial: Json
+          family: string
+          hue_family: string
+          id: string
+          in_production?: boolean
+          model: string
+          model_english?: string | null
+          pairing?: Json | null
+          performance: Json
+          photos: Json
+          pricing?: Json | null
+          recommended_paper_ids?: string[] | null
+          recommended_pen_ids?: string[] | null
+          subfamily?: string | null
+          updated_at?: string | null
+          variant?: string | null
+          warmth: string
+          year_introduced?: number | null
+        }
+        Update: {
+          affinity_scores?: Json | null
+          archive_number?: number
+          brand?: string
+          chemistry?: Json | null
+          color?: Json
+          country_of_origin?: string
+          created_at?: string | null
+          editorial?: Json
+          family?: string
+          hue_family?: string
+          id?: string
+          in_production?: boolean
+          model?: string
+          model_english?: string | null
+          pairing?: Json | null
+          performance?: Json
+          photos?: Json
+          pricing?: Json | null
+          recommended_paper_ids?: string[] | null
+          recommended_pen_ids?: string[] | null
+          subfamily?: string | null
+          updated_at?: string | null
+          variant?: string | null
+          warmth?: string
+          year_introduced?: number | null
+        }
         Relationships: []
       }
       pairings: {
@@ -68,9 +123,58 @@ export type Database = {
           use_case: string
           writing_sample_photo: string | null
         }
-        Insert: Record<string, unknown>
-        Update: Record<string, unknown>
-        Relationships: []
+        Insert: {
+          affinity_score: number
+          archive_number: number
+          conditions: Json
+          created_at?: string | null
+          editorial: Json
+          id: string
+          is_editors_choice?: boolean
+          is_pairing_of_week?: boolean
+          measurements: Json
+          mood?: string[]
+          paper_id: string
+          pen_id: string
+          scoring: Json
+          updated_at?: string | null
+          use_case: string
+          writing_sample_photo?: string | null
+        }
+        Update: {
+          affinity_score?: number
+          archive_number?: number
+          conditions?: Json
+          created_at?: string | null
+          editorial?: Json
+          id?: string
+          is_editors_choice?: boolean
+          is_pairing_of_week?: boolean
+          measurements?: Json
+          mood?: string[]
+          paper_id?: string
+          pen_id?: string
+          scoring?: Json
+          updated_at?: string | null
+          use_case?: string
+          writing_sample_photo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pairings_paper_id_fkey"
+            columns: ["paper_id"]
+            isOneToOne: false
+            referencedRelation: "papers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pairings_pen_id_fkey"
+            columns: ["pen_id"]
+            isOneToOne: false
+            referencedRelation: "pens"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       papers: {
         Row: {
@@ -99,9 +203,67 @@ export type Database = {
           variant: string | null
           year_introduced: number | null
         }
-        Insert: Record<string, unknown>
-        Update: Record<string, unknown>
-        Relationships: []
+        Insert: {
+          affinity_scores?: Json | null
+          appearance: Json
+          archive_number: number
+          brand: string
+          country_of_origin: string
+          created_at?: string | null
+          editorial: Json
+          format: Json
+          heritage?: Json | null
+          id: string
+          in_production?: boolean
+          mill?: string | null
+          model: string
+          performance: Json
+          photos: Json
+          pricing?: Json | null
+          recommended_pen_ids?: string[] | null
+          substance: Json
+          successor_of?: string | null
+          surface: Json
+          texture?: Json | null
+          updated_at?: string | null
+          variant?: string | null
+          year_introduced?: number | null
+        }
+        Update: {
+          affinity_scores?: Json | null
+          appearance?: Json
+          archive_number?: number
+          brand?: string
+          country_of_origin?: string
+          created_at?: string | null
+          editorial?: Json
+          format?: Json
+          heritage?: Json | null
+          id?: string
+          in_production?: boolean
+          mill?: string | null
+          model?: string
+          performance?: Json
+          photos?: Json
+          pricing?: Json | null
+          recommended_pen_ids?: string[] | null
+          substance?: Json
+          successor_of?: string | null
+          surface?: Json
+          texture?: Json | null
+          updated_at?: string | null
+          variant?: string | null
+          year_introduced?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "papers_successor_of_fkey"
+            columns: ["successor_of"]
+            isOneToOne: false
+            referencedRelation: "papers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pens: {
         Row: {
@@ -133,8 +295,64 @@ export type Database = {
           year_discontinued: number | null
           year_introduced: number
         }
-        Insert: Record<string, unknown>
-        Update: Record<string, unknown>
+        Insert: {
+          affinity_scores?: Json | null
+          archive_number: number
+          body: Json
+          brand: string
+          city_of_origin?: string | null
+          country_of_origin: string
+          created_at?: string | null
+          dimensions: Json
+          edition?: Json | null
+          editorial: Json
+          ergonomics?: Json | null
+          generation?: string | null
+          heritage?: Json | null
+          id: string
+          in_production?: boolean
+          ink_delivery: Json
+          model: string
+          nib: Json
+          performance: Json
+          photos: Json
+          pricing: Json
+          recommended_paper_ids?: string[] | null
+          service?: Json | null
+          updated_at?: string | null
+          variant?: string | null
+          year_discontinued?: number | null
+          year_introduced: number
+        }
+        Update: {
+          affinity_scores?: Json | null
+          archive_number?: number
+          body?: Json
+          brand?: string
+          city_of_origin?: string | null
+          country_of_origin?: string
+          created_at?: string | null
+          dimensions?: Json
+          edition?: Json | null
+          editorial?: Json
+          ergonomics?: Json | null
+          generation?: string | null
+          heritage?: Json | null
+          id?: string
+          in_production?: boolean
+          ink_delivery?: Json
+          model?: string
+          nib?: Json
+          performance?: Json
+          photos?: Json
+          pricing?: Json
+          recommended_paper_ids?: string[] | null
+          service?: Json | null
+          updated_at?: string | null
+          variant?: string | null
+          year_discontinued?: number | null
+          year_introduced?: number
+        }
         Relationships: []
       }
     }

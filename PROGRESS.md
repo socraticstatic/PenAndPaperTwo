@@ -16,6 +16,9 @@ Two parallel numberings to avoid confusion:
 | **P1** | Foundation: repo + scaffold + literal port of design | ✅ done (2026-05-17 → 2026-05-18) | Next.js 15 App Router, all 6 pages rendered via `html-react-parser`, Supabase + Stripe clients scaffolded, repo at [socraticstatic/PenAndPaperTwo](https://github.com/socraticstatic/PenAndPaperTwo) |
 | **P2** | Vertical slice: `pens` table → live `/pen` route | ✅ done (2026-05-18) | Supabase project [`pen-and-paper-two`](https://supabase.com/dashboard/project/gmmwypnlqjqcezwxzbiw) (ref `gmmwypnlqjqcezwxzbiw`, us-west-1). `pens` table + 10 facet indexes + RLS public-read. Pilot Custom 823 seeded. `/pen` route binds 6 hero elements (breadcrumb, H1, deck, eyebrow row, key-spec table) from the row; rest of page is still prototype markup. Acceptance test passed: edited `model` to "Custom 823 ✓", reload propagated to both crumb + H1; reverted. |
 | **P3** | Extend dynamic backbone: papers + inks + pairings | ✅ done (2026-05-18) | 3 more tables + RLS + indexes. Seeded Tomoe River S, Iroshizuku Tsuki-yo, Pairing №047 (Custom 823 × Tomoe). `/paper`, `/ink-detail`, `/pairing` all DB-driven for hero region (crumb, H1, deck, eyebrow row, paper keyspecs). Acceptance test: edited paper `gsm` 52→68, reload propagated to eyebrow AND weight keyspec; reverted. Production build clean (4 dynamic routes, 2 static). |
+| **P4** | Kill structural hard-coding: refactor + dynamic routes | ✅ done (2026-05-18) | Shared `<EntityDetailPage>` collapses the 4-way boilerplate. JSONB shapes consolidated in `lib/supabase/jsonb-shapes.ts`. Per-entity `buildReplace` functions extracted to `lib/entities/<entity>-replace.tsx`. `database.types.ts` regenerated with full `Insert`/`Update`. New SSG routes `/pens/[id]`, `/papers/[id]`, `/pairings/[id]`, `/inks/[id]` use `generateStaticParams` over the build-time client. Old singular routes redirect at request time to the row with lowest `archive_number` — no hard-coded IDs anywhere. Production build clean: 4 SSG, 4 ƒ Dynamic legacy redirects, 2 Static. |
+| **P5** | (queued) Kill home + archive hard-coding | 🟥 | `/` fetches pairing-of-week + featured grids from DB; `/ink` archive lists all inks; seed more rows so the home grids render non-empty. |
+| **P6** | (queued) Bind every attribute below the hero | 🟥 | 8 attribute cards on pens + papers, 6 on inks, 5-axis + measurements + conditions tables on pairings, recommended-marriages rails, writing-sample cards. Full progressive disclosure. |
 
 ### P2 design constraints
 
@@ -59,4 +62,4 @@ Two parallel numberings to avoid confusion:
 
 ---
 
-*Last updated: 2026-05-18 by P3 close-out (papers + inks + pairings live).*
+*Last updated: 2026-05-18 by P4 close-out (refactor + dynamic routes).*

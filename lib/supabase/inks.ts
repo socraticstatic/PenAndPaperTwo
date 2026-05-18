@@ -1,25 +1,11 @@
-import { createSupabaseServerClient } from "./server";
+import { createSupabaseServerClient, createSupabaseBuildClient } from "./server";
 import type { Database } from "./database.types";
 
 export type InkRow = Database["public"]["Tables"]["inks"]["Row"];
 
-export type InkColor = {
-  hex?: string;
-  name?: string;
-  sheenHex?: string;
-  shadingLow?: string;
-};
-export type InkPerformance = {
-  sheenVisibility?: number;
-  shadingVisibility?: number;
-  dryTimeBaseSec?: number;
-};
-export type InkPricing = { priceTier?: string; msrpUsd?: number; bottleMl?: number };
-export type InkEditorial = {
-  deck?: string;
-  tastingNote?: string;
-  editorPick?: boolean | string;
-};
+// JSONB shapes for inks live in lib/supabase/jsonb-shapes.ts as
+// InkColor / InkChemistry / InkPerformance / InkPairing plus the
+// cross-entity Editorial / Pricing shapes.
 
 export async function fetchInkById(id: string): Promise<InkRow | null> {
   const supabase = await createSupabaseServerClient();
@@ -27,7 +13,14 @@ export async function fetchInkById(id: string): Promise<InkRow | null> {
     .from("inks")
     .select("*")
     .eq("id", id)
-    .single();
+    .maybeSingle();
   if (error) throw new Error(`fetchInkById(${id}) failed: ${error.message}`);
   return data;
+}
+
+export async function listInkIds(): Promise<string[]> {
+  const supabase = createSupabaseBuildClient();
+  const { data, error } = await supabase.from("inks").select("id");
+  if (error) throw new Error(`listInkIds failed: ${error.message}`);
+  return (data ?? []).map((r) => r.id);
 }

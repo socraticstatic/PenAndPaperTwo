@@ -1,28 +1,11 @@
-import { createSupabaseServerClient } from "./server";
+import { createSupabaseServerClient, createSupabaseBuildClient } from "./server";
 import type { Database } from "./database.types";
 
 export type PaperRow = Database["public"]["Tables"]["papers"]["Row"];
 
-export type PaperSubstance = { gsm?: number; pulpSource?: string };
-export type PaperSurface = { tooth?: string; sizing?: string; coating?: string };
-export type PaperPerformance = {
-  sheenVisibility?: number;
-  bleedThroughTendency?: number;
-  showThroughTendency?: number;
-  dryTimeByNib?: Record<string, number | undefined>;
-};
-export type PaperAppearance = {
-  tone?: string;
-  warmth?: string;
-  colorHex?: string;
-  swatchClass?: string;
-};
-export type PaperPricing = { priceTier?: string; fromPriceLabel?: string };
-export type PaperEditorial = {
-  deck?: string;
-  tastingNote?: string;
-  editorPick?: boolean | string;
-};
+// JSONB shapes for papers live in lib/supabase/jsonb-shapes.ts as
+// PaperSubstance / PaperSurface / PaperPerformance / PaperAppearance /
+// PaperFormat plus the cross-entity Editorial / Pricing shapes.
 
 export async function fetchPaperById(id: string): Promise<PaperRow | null> {
   const supabase = await createSupabaseServerClient();
@@ -30,7 +13,14 @@ export async function fetchPaperById(id: string): Promise<PaperRow | null> {
     .from("papers")
     .select("*")
     .eq("id", id)
-    .single();
+    .maybeSingle();
   if (error) throw new Error(`fetchPaperById(${id}) failed: ${error.message}`);
   return data;
+}
+
+export async function listPaperIds(): Promise<string[]> {
+  const supabase = createSupabaseBuildClient();
+  const { data, error } = await supabase.from("papers").select("id");
+  if (error) throw new Error(`listPaperIds failed: ${error.message}`);
+  return (data ?? []).map((r) => r.id);
 }

@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Ink Cupboard — Pen &amp; Paper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · ink.html
+  The Ink Cupboard — archive of fountain pen inks. Route: /inks
+  Every ink card below is HARD-CODED SAMPLE DATA. Replace with payload from:
+      const { data: inks } = await sb.from('inks')
+        .select('*')
+        .order('archive_number')
+        .range(0, 7);
+  See CLAUDE.md §6 for the full `Ink` schema and Supabase table DDL.
+
+  Per-card field map:
+    .card-no "№ 014"            → "№ " + pad3(ink.archive_number)
+    .card-origin "JP · 2007"    → isoCountry(ink.country_of_origin)
+                                  + " · " + ink.year_introduced
+    .card-brand                 → ink.brand
+    .card-name                  → ink.model
+    .card-trans (italic)        → ink.modelEnglish (Japanese translation, if set)
+    .ink-swatch CSS vars:
+      --ink-color               → ink.color.oklch (or fallback to .hex)
+      --ink-shade-low           → ink.color.shadingLow
+      --ink-sheen               → ink.color.sheenHex
+      --ink-shimmer             → ink.color.shimmerColor
+    .swatch-marks .m            → conditional flags: "SHEEN" if sheenVisibility>=4,
+                                  "SHIMMER" if shimmerVisibility>=1, "ARCHIVAL"
+                                  if chemistry.archival, "I/G" if family==='Iron gall'
+    .writing (sample text)      → editorial.colorStory excerpt or ink.modelEnglish
+    .stats rows                 → performance.wetness, .saturation, .sheenVisibility*20,
+                                  performance.dryTimeBaseSec
+    .card-foot .fam             → ink.family
+    .card-foot .price           → ink.pricing.msrpUsd (currency-formatted)
+
+  IMAGE-SLOT NOTICE:
+  No image-slots on this page — the swatch IS the asset. Bottle photographs
+  would replace the swatch in a richer detail view (ink-detail.html, future).
+-->
+<style>
+  .ink-hero {
+    padding: 64px 0 56px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .ink-hero-issue {
+    display: flex; justify-content: space-between;
+    border-bottom: var(--rule);
+    padding-bottom: 22px;
+    margin-bottom: 28px;
+  }
+  .ink-hero-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(72px, 12vw, 180px);
+    line-height: 0.86;
+    letter-spacing: -0.025em;
+    text-align: center;
+  }
+  .ink-hero-title em { color: var(--oxblood); font-style: italic; font-weight: 300; }
+  .ink-hero-tag {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-top: var(--rule);
+    margin-top: 28px;
+    padding: 18px 0 0;
+  }
+  .ink-hero-tag .lede {
+    font-family: var(--font-display); font-style: italic;
+    font-size: 22px; line-height: 1.35; color: var(--ink-2);
+    max-width: 38ch;
+  }
+</style>
+</head>
+<body>
+
+<!-- top bar -->
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <nav class="topbar-nav">
+      <a href="index.html#archive-pens">Pens</a>
+      <a href="index.html#archive-papers">Papers</a>
+      <a href="ink.html">Inks</a>
+      <a href="index.html#pairings">Pairings</a>
+      <a href="index.html#picker">Find a pairing</a>
+    </nav>
+    <a href="index.html" class="topbar-mark">Pen &amp; Paper</a>
+    <div class="topbar-meta">
+      <span><span class="dot"></span>The Ink Cupboard</span>
+      <span>64 Inks Tasted</span>
+      <span>Search ⌘K</span>
+    </div>
+  </div>
+</header>
+
+<!-- hero -->
+<section class="ink-hero">
+  <div class="wrap">
+    <div class="ink-hero-issue mono">
+      <span>Volume IV · Department III</span>
+      <span>The Ink Cupboard</span>
+      <span>— 64 entries —</span>
+      <span>Tested in M, on Tomoe River</span>
+      <span>Spring MMXXVI</span>
+    </div>
+    <h1 class="ink-hero-title">The <em>Ink</em> Cupboard</h1>
+    <div class="ink-hero-tag">
+      <span class="mono">Every ink in this cupboard has been<br>tasted on the standard cream paper,<br>at 21 °C and 48 % RH.</span>
+      <p class="lede">Colour is only the first read. The ink's wetness, sheen, behaviour against the lamp, and how it changes between morning and evening — these are the rest of the bottle.</p>
+      <span class="mono" style="text-align:right">Sort by family below ↓<br>or browse the full <a href="#archive" style="text-decoration:underline">cupboard →</a></span>
+    </div>
+  </div>
+</section>
+
+<!-- filters + hue swatch row -->
+<section class="section" id="archive" style="padding-top: 56px;">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 01 · The Cupboard</span>
+      <h2 class="section-title">Sixty-four <em>inks</em>, by hue and humour.</h2>
+      <span class="section-kicker">Pick a hue band below — or filter by family, wetness, sheen.</span>
+    </div>
+
+    <!--
+      Hue band — a continuous spectrum across the catalogue's hues.
+      Each cell maps to a bucket of the `ink.hue_family` field.
+      Field counts: render `inks_count_by_hue` from `ink_facets()` RPC
+      (a Postgres function similar to pen_facets()).
+    -->
+    <div class="hue-row">
+      <div style="background: oklch(20% 0.06 255)"><span class="hue-label">Blue · 18</span></div>
+      <div style="background: oklch(18% 0.04 250)"><span class="hue-label">Blue-black · 9</span></div>
+      <div style="background: oklch(14% 0.012 80)"><span class="hue-label">Black · 6</span></div>
+      <div style="background: oklch(28% 0.06 145)"><span class="hue-label">Green · 7</span></div>
+      <div style="background: oklch(32% 0.07 195)"><span class="hue-label">Teal · 5</span></div>
+      <div style="background: oklch(30% 0.11 25)"><span class="hue-label">Red · 4</span></div>
+      <div style="background: oklch(28% 0.10 20)"><span class="hue-label">Burgundy · 3</span></div>
+      <div style="background: oklch(36% 0.08 60)"><span class="hue-label">Brown · 6</span></div>
+      <div style="background: oklch(40% 0.10 50)"><span class="hue-label">Orange · 2</span></div>
+      <div style="background: oklch(30% 0.07 300)"><span class="hue-label">Purple · 4</span></div>
+    </div>
+
+    <!-- family / character chips -->
+    <div class="chips">
+      <span class="chip-group-label">Family</span>
+      <span class="chip on">Dye<span class="x">×42</span></span>
+      <span class="chip">Iron gall<span class="x">×6</span></span>
+      <span class="chip">Pigment<span class="x">×4</span></span>
+      <span class="chip on">Sheening<span class="x">×16</span></span>
+      <span class="chip">Shimmer<span class="x">×9</span></span>
+      <span class="chip">Bulletproof<span class="x">×3</span></span>
+      <span class="chip-group-label" style="margin-left:24px">Behaviour</span>
+      <span class="chip">Waterproof</span>
+      <span class="chip">Archival<span class="x">×11</span></span>
+      <span class="chip on">Safe for demonstrators<span class="x">×54</span></span>
+      <span class="chip-group-label" style="margin-left:24px">Sort</span>
+      <span class="chip">Hue, around the wheel</span>
+      <span class="chip">Wetness ↓</span>
+      <span class="chip">Editor's choice</span>
+    </div>
+
+    <!-- ink archive grid -->
+    <div class="ink-archive">
+
+      <!--
+        INK CARD · Iroshizuku Tsuki-yo
+        archive_number: 14, family: Sheening (dye), hue: Blue-black
+        color.hex: #1c2c47, sheenHex: #b87333 (copper)
+      -->
+      <a class="ink-card" href="ink-detail.html"
+         style="--ink-color: oklch(24% 0.06 252); --ink-shade-low: oklch(15% 0.05 252); --ink-sheen: oklch(48% 0.12 50);">
+        <div class="card-top">
+          <span class="card-no">№ 014</span>
+          <span class="card-origin">JP · 2007</span>
+        </div>
+        <div class="ink-swatch">
+          <span class="swatch-tag">#1C2C47</span>
+          <span class="swatch-marks"><span class="m">SHEEN</span></span>
+          <span class="sheen-stripe"></span>
+          <span class="writing">a letter held to lamplight</span>
+        </div>
+        <div>
+          <div class="card-brand">Pilot · Iroshizuku</div>
+          <h3 class="card-name">Tsuki-yo</h3>
+          <div class="card-trans">— Moonlit Night</div>
+        </div>
+        <div class="stats">
+          <div class="row"><span class="k">Wetness</span><div class="bar"><i style="left:78%"></i></div><span class="v">78</span></div>
+          <div class="row"><span class="k">Saturation</span><div class="bar"><i style="left:84%"></i></div><span class="v">84</span></div>
+          <div class="row"><span class="k">Sheen</span><div class="bar"><i style="left:90%"></i></div><span class="v">5/5</span></div>
+          <div class="row"><span class="k">Dry time</span><div class="bar"><i style="left:62%"></i></div><span class="v">22 s</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="fam">Sheening</span>
+          <span class="price">$ 28 / 50 ml</span>
+        </div>
+      </a>
+
+      <!-- INK CARD · Diamine Oxblood (burgundy, gold-green sheen) -->
+      <a class="ink-card" href="ink-detail.html"
+         style="--ink-color: oklch(28% 0.10 22); --ink-shade-low: oklch(18% 0.09 20); --ink-sheen: oklch(48% 0.10 140);">
+        <div class="card-top">
+          <span class="card-no">№ 041</span>
+          <span class="card-origin">UK · 1864</span>
+        </div>
+        <div class="ink-swatch">
+          <span class="swatch-tag">#5A1A1F</span>
+          <span class="swatch-marks"><span class="m">SHEEN</span></span>
+          <span class="sheen-stripe"></span>
+          <span class="writing">— with my warmest regards,</span>
+        </div>
+        <div>
+          <div class="card-brand">Diamine</div>
+          <h3 class="card-name">Oxblood</h3>
+          <div class="card-trans">— a deep correspondent's red</div>
+        </div>
+        <div class="stats">
+          <div class="row"><span class="k">Wetness</span><div class="bar"><i style="left:64%"></i></div><span class="v">64</span></div>
+          <div class="row"><span class="k">Saturation</span><div class="bar"><i style="left:88%"></i></div><span class="v">88</span></div>
+          <div class="row"><span class="k">Sheen</span><div class="bar"><i style="left:72%"></i></div><span class="v">4/5</span></div>
+          <div class="row"><span class="k">Dry time</span><div class="bar"><i style="left:54%"></i></div><span class="v">19 s</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="fam">Dye · Sheening</span>
+          <span class="price">£ 8 / 80 ml</span>
+        </div>
+      </a>
+
+      <!-- INK CARD · Sailor Yama-dori (teal, gold sheen) -->
+      <a class="ink-card" href="ink-detail.html"
+         style="--ink-color: oklch(34% 0.08 195); --ink-shade-low: oklch(22% 0.07 195); --ink-sheen: oklch(60% 0.14 75);">
+        <div class="card-top">
+          <span class="card-no">№ 028</span>
+          <span class="card-origin">JP · 2011</span>
+        </div>
+        <div class="ink-swatch">
+          <span class="swatch-tag">#1F4A4E</span>
+          <span class="swatch-marks"><span class="m">SHEEN</span><span class="m">EC</span></span>
+          <span class="sheen-stripe"></span>
+          <span class="writing">の山取り — copper-pheasant teal</span>
+        </div>
+        <div>
+          <div class="card-brand">Sailor</div>
+          <h3 class="card-name">Yama-dori</h3>
+          <div class="card-trans">— Mountain Bird</div>
+        </div>
+        <div class="stats">
+          <div class="row"><span class="k">Wetness</span><div class="bar"><i style="left:72%"></i></div><span class="v">72</span></div>
+          <div class="row"><span class="k">Saturation</span><div class="bar"><i style="left:86%"></i></div><span class="v">86</span></div>
+          <div class="row"><span class="k">Sheen</span><div class="bar"><i style="left:90%"></i></div><span class="v">5/5</span></div>
+          <div class="row"><span class="k">Dry time</span><div class="bar"><i style="left:58%"></i></div><span class="v">20 s</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="fam">Sheening</span>
+          <span class="price">¥ 2 200 / 50 ml</span>
+        </div>
+      </a>
+
+      <!-- INK CARD · KWZ Iron Gall Blue Black -->
+      <a class="ink-card" href="ink-detail.html"
+         style="--ink-color: oklch(22% 0.04 252); --ink-shade-low: oklch(12% 0.02 252);">
+        <div class="card-top">
+          <span class="card-no">№ 053</span>
+          <span class="card-origin">PL · 2014</span>
+        </div>
+        <div class="ink-swatch">
+          <span class="swatch-tag">#1B2734</span>
+          <span class="swatch-marks"><span class="m">I/G</span><span class="m">ARCHIVAL</span></span>
+          <span class="writing">on the records, indelibly.</span>
+        </div>
+        <div>
+          <div class="card-brand">KWZ Ink</div>
+          <h3 class="card-name">Iron Gall Blue-Black</h3>
+          <div class="card-trans">— turns near-black on drying</div>
+        </div>
+        <div class="stats">
+          <div class="row"><span class="k">Wetness</span><div class="bar"><i style="left:54%"></i></div><span class="v">54</span></div>
+          <div class="row"><span class="k">Saturation</span><div class="bar"><i style="left:78%"></i></div><span class="v">78</span></div>
+          <div class="row"><span class="k">Sheen</span><div class="bar"><i style="left:18%"></i></div><span class="v">1/5</span></div>
+          <div class="row"><span class="k">Dry time</span><div class="bar"><i style="left:24%"></i></div><span class="v">9 s</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="fam">Iron gall</span>
+          <span class="price">€ 14 / 60 ml</span>
+        </div>
+      </a>
+
+      <!-- INK CARD · Iroshizuku Take-sumi (bamboo charcoal, black) -->
+      <a class="ink-card" href="ink-detail.html"
+         style="--ink-color: oklch(14% 0.008 250); --ink-shade-low: oklch(8% 0.005 250);">
+        <div class="card-top">
+          <span class="card-no">№ 022</span>
+          <span class="card-origin">JP · 2007</span>
+        </div>
+        <div class="ink-swatch">
+          <span class="swatch-tag">#0E1216</span>
+          <span class="writing">— 竹墨 — ink in its element</span>
+        </div>
+        <div>
+          <div class="card-brand">Pilot · Iroshizuku</div>
+          <h3 class="card-name">Take-sumi</h3>
+          <div class="card-trans">— Bamboo Charcoal</div>
+        </div>
+        <div class="stats">
+          <div class="row"><span class="k">Wetness</span><div class="bar"><i style="left:68%"></i></div><span class="v">68</span></div>
+          <div class="row"><span class="k">Saturation</span><div class="bar"><i style="left:94%"></i></div><span class="v">94</span></div>
+          <div class="row"><span class="k">Sheen</span><div class="bar"><i style="left:14%"></i></div><span class="v">1/5</span></div>
+          <div class="row"><span class="k">Dry time</span><div class="bar"><i style="left:46%"></i></div><span class="v">16 s</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="fam">Dye · Standard</span>
+          <span class="price">$ 28 / 50 ml</span>
+        </div>
+      </a>
+
+      <!-- INK CARD · Robert Oster Fire & Ice (turquoise / red sheen) -->
+      <a class="ink-card" href="ink-detail.html"
+         style="--ink-color: oklch(50% 0.13 210); --ink-shade-low: oklch(32% 0.11 215); --ink-sheen: oklch(48% 0.17 25);">
+        <div class="card-top">
+          <span class="card-no">№ 037</span>
+          <span class="card-origin">AU · 2014</span>
+        </div>
+        <div class="ink-swatch">
+          <span class="swatch-tag">#0E7E97</span>
+          <span class="swatch-marks"><span class="m">SHEEN</span></span>
+          <span class="sheen-stripe"></span>
+          <span class="writing">— ice with embers at the edges.</span>
+        </div>
+        <div>
+          <div class="card-brand">Robert Oster</div>
+          <h3 class="card-name">Fire &amp; Ice</h3>
+          <div class="card-trans">— turquoise with red sheen</div>
+        </div>
+        <div class="stats">
+          <div class="row"><span class="k">Wetness</span><div class="bar"><i style="left:80%"></i></div><span class="v">80</span></div>
+          <div class="row"><span class="k">Saturation</span><div class="bar"><i style="left:74%"></i></div><span class="v">74</span></div>
+          <div class="row"><span class="k">Sheen</span><div class="bar"><i style="left:90%"></i></div><span class="v">5/5</span></div>
+          <div class="row"><span class="k">Dry time</span><div class="bar"><i style="left:68%"></i></div><span class="v">24 s</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="fam">Sheening</span>
+          <span class="price">$ 17 / 50 ml</span>
+        </div>
+      </a>
+
+      <!-- INK CARD · Diamine Magical Forest (shimmer green) -->
+      <a class="ink-card" href="ink-detail.html"
+         style="--ink-color: oklch(32% 0.10 145); --ink-shade-low: oklch(20% 0.09 145); --ink-shimmer: oklch(78% 0.14 95);">
+        <div class="card-top">
+          <span class="card-no">№ 049</span>
+          <span class="card-origin">UK · 2015</span>
+        </div>
+        <div class="ink-swatch">
+          <span class="swatch-tag">#1B5A30</span>
+          <span class="swatch-marks"><span class="m">SHIMMER</span></span>
+          <span class="shimmer-dust"></span>
+          <span class="writing">— the canopy, lit from within.</span>
+        </div>
+        <div>
+          <div class="card-brand">Diamine · Shimmertastic</div>
+          <h3 class="card-name">Magical Forest</h3>
+          <div class="card-trans">— green with gold shimmer</div>
+        </div>
+        <div class="stats">
+          <div class="row"><span class="k">Wetness</span><div class="bar"><i style="left:68%"></i></div><span class="v">68</span></div>
+          <div class="row"><span class="k">Saturation</span><div class="bar"><i style="left:82%"></i></div><span class="v">82</span></div>
+          <div class="row"><span class="k">Shimmer</span><div class="bar"><i style="left:84%"></i></div><span class="v">4/5</span></div>
+          <div class="row"><span class="k">Dry time</span><div class="bar"><i style="left:74%"></i></div><span class="v">28 s</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="fam">Shimmer</span>
+          <span class="price">£ 12 / 50 ml</span>
+        </div>
+      </a>
+
+      <!-- INK CARD · Iroshizuku Asa-gao (morning glory blue) -->
+      <a class="ink-card" href="ink-detail.html"
+         style="--ink-color: oklch(38% 0.13 265); --ink-shade-low: oklch(24% 0.11 265); --ink-sheen: oklch(48% 0.11 25);">
+        <div class="card-top">
+          <span class="card-no">№ 019</span>
+          <span class="card-origin">JP · 2007</span>
+        </div>
+        <div class="ink-swatch">
+          <span class="swatch-tag">#1F3FA1</span>
+          <span class="swatch-marks"><span class="m">SHEEN</span></span>
+          <span class="sheen-stripe"></span>
+          <span class="writing">朝顔 — a morning's vivid blue.</span>
+        </div>
+        <div>
+          <div class="card-brand">Pilot · Iroshizuku</div>
+          <h3 class="card-name">Asa-gao</h3>
+          <div class="card-trans">— Morning Glory</div>
+        </div>
+        <div class="stats">
+          <div class="row"><span class="k">Wetness</span><div class="bar"><i style="left:74%"></i></div><span class="v">74</span></div>
+          <div class="row"><span class="k">Saturation</span><div class="bar"><i style="left:92%"></i></div><span class="v">92</span></div>
+          <div class="row"><span class="k">Sheen</span><div class="bar"><i style="left:54%"></i></div><span class="v">3/5</span></div>
+          <div class="row"><span class="k">Dry time</span><div class="bar"><i style="left:60%"></i></div><span class="v">21 s</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="fam">Dye · Sheening</span>
+          <span class="price">$ 28 / 50 ml</span>
+        </div>
+      </a>
+
+    </div>
+
+    <div style="display:flex; justify-content:space-between; padding-top:24px;" class="mono">
+      <span>Showing 8 of 64 inks</span>
+      <span>Sort by · <span style="text-decoration:underline">Hue, around the wheel</span></span>
+      <span>Load next 16 →</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── EDITORIAL CABINET — INKS BY USE ─────────── -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · CURATED LISTS — INKS BY USE
+  Three curated lists of inks for specific use cases. Render from:
+      const { data } = await sb.from('inks')
+        .select('id, brand, model, performance, color')
+        .containedBy('pairing->bestForUse', useCase)
+        .order('performance->>saturation', { ascending: false })
+        .limit(4);
+  Each <li> field map:
+    .nm "Iroshizuku Tsuki-yo"   → ink.brand + " · " + ink.model
+    .meta "Sheen 5/5 · 78"       → "Sheen " + ink.performance.sheenVisibility
+                                    + "/5 · " + ink.performance.wetness
+    .swatch-dot bg colour       → ink.color.hex
+-->
+<section class="section" id="cabinet" style="border-top: 1px solid var(--ink);">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 02 · The Curated Cabinet</span>
+      <h2 class="section-title">Eight inks for <em>the desk</em>; eight for <em>the letter</em>.</h2>
+      <span class="section-kicker">Editor's lists — by what one means the writing for.</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: var(--rule);">
+      <div style="padding: 28px 32px; border-right: var(--rule); background: var(--paper);">
+        <div class="mono" style="color: var(--ink-mute); margin-bottom: 8px;">For correspondence</div>
+        <h3 style="font-family: var(--font-display); font-size: 32px; line-height: 1.0; margin-bottom: 18px;">The Letter <em style="color: var(--oxblood); font-style: italic;">Drawer</em></h3>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 14px;">
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: var(--rule);">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(24% 0.06 252); border: var(--rule);"></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">Iroshizuku · Tsuki-yo</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Sheen 5/5 · Wet · Cream</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 014</span>
+          </li>
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: var(--rule);">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(28% 0.10 22); border: var(--rule);"></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">Diamine · Oxblood</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Sheen 4/5 · Cream · Cotton</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 041</span>
+          </li>
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: var(--rule);">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(34% 0.08 195); border: var(--rule);"></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">Sailor · Yama-dori</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Sheen 5/5 · Wet · Bright</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 028</span>
+          </li>
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center;">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(36% 0.08 60); border: var(--rule);"></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">Iroshizuku · Ina-ho</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Shading 5/5 · Warm</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 026</span>
+          </li>
+        </ul>
+      </div>
+
+      <div style="padding: 28px 32px; border-right: var(--rule); background: var(--paper);">
+        <div class="mono" style="color: var(--ink-mute); margin-bottom: 8px;">For daily notes</div>
+        <h3 style="font-family: var(--font-display); font-size: 32px; line-height: 1.0; margin-bottom: 18px;">The Desk <em style="color: var(--oxblood); font-style: italic;">Bottle</em></h3>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 14px;">
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: var(--rule);">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(14% 0.008 250); border: var(--rule);"></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">Iroshizuku · Take-sumi</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Dry · 16s · Universal</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 022</span>
+          </li>
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: var(--rule);">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(22% 0.04 252); border: var(--rule);"></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">KWZ · I/G Blue-Black</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Iron gall · Archival · 9s</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 053</span>
+          </li>
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: var(--rule);">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(28% 0.06 250); border: var(--rule);"></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">Pilot · Blue-Black</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Workhorse · 12s · Cheap</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 002</span>
+          </li>
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center;">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(30% 0.08 145); border: var(--rule);"></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">Sailor · Sei-boku</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Pigment · Waterproof</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 031</span>
+          </li>
+        </ul>
+      </div>
+
+      <div style="padding: 28px 32px; background: var(--paper);">
+        <div class="mono" style="color: var(--ink-mute); margin-bottom: 8px;">For the occasional</div>
+        <h3 style="font-family: var(--font-display); font-size: 32px; line-height: 1.0; margin-bottom: 18px;">The Showpiece <em style="color: var(--oxblood); font-style: italic;">Tray</em></h3>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 14px;">
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: var(--rule);">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(50% 0.13 210); border: var(--rule); position: relative;"><span style="position: absolute; inset: 0; border-radius:50%; background: radial-gradient(circle, oklch(78% 0.14 95) 0.6px, transparent 1px); background-size: 4px 4px; mix-blend-mode: screen;"></span></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">Robert Oster · Fire &amp; Ice</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Mirror sheen · 24s</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 037</span>
+          </li>
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: var(--rule);">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(32% 0.10 145); border: var(--rule);"></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">Diamine · Magical Forest</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Gold shimmer · 28s</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 049</span>
+          </li>
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: var(--rule);">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(38% 0.13 265); border: var(--rule);"></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">Iroshizuku · Asa-gao</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Vivid · 21s · Sheen 3/5</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 019</span>
+          </li>
+          <li style="display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center;">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: oklch(36% 0.13 350); border: var(--rule);"></span>
+            <div>
+              <div style="font-family: var(--font-display); font-size: 19px;">Sailor · Kobe Nankin-Red</div>
+              <div class="mono" style="color: var(--ink-mute); margin-top: 2px;">Vermillion · Saturated</div>
+            </div>
+            <span class="mono" style="color: var(--ink-mute);">№ 044</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- colophon -->
+<footer class="colophon">
+  <div class="wrap">
+    <div class="colophon-grid">
+      <div>
+        <div class="colophon-mark">Pen<span style="color: var(--oxblood); font-style: italic; padding: 0 .04em;">&amp;</span>Paper</div>
+        <p>A pairing almanac for the fountain pen and its proper page. The Ink Cupboard is published as a department of each quarterly issue.</p>
+      </div>
+      <div>
+        <h4>The Archive</h4>
+        <ul>
+          <li><a href="index.html#archive-pens">172 Pens</a></li>
+          <li><a href="index.html#archive-papers">140 Papers</a></li>
+          <li><a href="ink.html">64 Inks</a></li>
+          <li><a href="index.html#pairings">48 Pairings</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>The Cupboard</h4>
+        <ul>
+          <li><a href="#archive">By hue</a></li>
+          <li><a href="#archive">By family</a></li>
+          <li><a href="#cabinet">Curated cabinets</a></li>
+          <li><a href="#">Shimmer &amp; sheen</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Test conditions</h4>
+        <p style="margin-bottom: 14px;">All inks tested on Tomoe River S, Pilot Custom 823 (M), 21 °C, 48 % RH, 2700 K.</p>
+        <a href="index.html" style="font-family: var(--font-display); font-size: 22px; border-bottom: 1px solid var(--ink); padding-bottom: 4px; font-style: italic;">← To the Almanac</a>
+      </div>
+    </div>
+    <div class="colophon-foot">
+      <span>© MMXXVI Pen &amp; Paper</span>
+      <span>Department III · The Ink Cupboard</span>
+      <span>Issue IV · 02 · Spring</span>
+    </div>
+  </div>
+</footer>
+
+<!-- chip toggle -->
+<script>
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => c.classList.toggle('on')));
+</script>
+
+<script src="search.js" defer></script>
+</body>
+</html>

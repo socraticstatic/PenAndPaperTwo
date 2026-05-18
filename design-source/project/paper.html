@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tomoe River S — Pen &amp; Paper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · paper.html
+  This page is the dedicated single-paper detail view. Route: /papers/:id
+  Every value below the topbar is HARD-CODED SAMPLE DATA for Tomoe River S.
+  Replace with payload from:
+      GET /api/papers/:id   →   Paper   (see CLAUDE.md §4)
+
+  Page-wide field map for the hero block:
+    breadcrumb "№ 001 — Tomoe River S" → "№ " + paper.archiveNumber + " — " + paper.model
+    breadcrumb "1 / 140"                → paper.archiveNumber + " / " + totalPapers
+    eyebrow "52 GSM · CREAM"            → paper.substance.gsm + " GSM · "
+                                          + paper.appearance.tone.toUpperCase()
+    eyebrow "From €8 / pad"             → currency-formatted paper.pricing.msrpEur
+    badge "● Editor's Choice — Sheen"   → paper.editorial.editorPick label
+    H1 "Tomoe River S · 52 gsm"         → paper.brand + " " + paper.model
+                                          + " " + paper.substance.gsm + " gsm"
+    sub-line "Tomoegawa · Shizuoka, JP" → paper.mill + " · " + paper.countryOfOrigin
+                                          + " · est. " + paper.yearIntroduced
+    deck (italic paragraph)             → paper.editorial.deck
+
+  IMAGE-SLOT NOTICE:
+  Every <image-slot id="…"> is a DESIGN-TIME placeholder backed by
+  image-slot.js. In production, replace with <img src="…CDN URL…">.
+  The slot id maps to paper.photos.<field>. On this page:
+      id="paper-page-hero" → paper.photos.hero
+  All product photos MUST be transparent PNGs (CLAUDE.md §2).
+-->
+<script src="image-slot.js"></script>
+<style>
+  .breadcrumb {
+    border-bottom: var(--rule);
+    padding: 18px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .breadcrumb a:hover { color: var(--ink); }
+  .breadcrumb .crumb-mid { color: var(--ink); }
+
+  .paper-hero {
+    padding: 56px 0 88px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 72px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .paper-hero-visual {
+    aspect-ratio: 3/4;
+    background: oklch(94% 0.022 90);
+    border: var(--rule);
+    position: relative;
+    overflow: hidden;
+  }
+  .paper-hero-visual .stripes {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(to right, transparent 0 7px, color-mix(in oklch, var(--ink) 6%, transparent) 7px 8px);
+  }
+  .paper-hero-visual .corner-info {
+    position: absolute;
+    bottom: 18px; left: 18px; right: 18px;
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute);
+    background: var(--paper); padding: 8px 12px; border: var(--rule);
+  }
+  .paper-hero-visual .writing-large {
+    position: absolute; left: 36px; right: 36px; top: 40%; transform: translateY(-50%);
+    font-family: var(--font-display); font-style: italic;
+    font-size: 44px; line-height: 1.3;
+    color: oklch(28% 0.07 255); opacity: 0.45;
+    letter-spacing: 0.005em;
+  }
+
+  .paper-hero-eyebrow {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 18px;
+    border-bottom: var(--rule);
+    margin-bottom: 28px;
+  }
+  .paper-hero h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(72px, 9vw, 144px);
+    line-height: 0.86;
+    letter-spacing: -0.025em;
+  }
+  .paper-hero h1 em { color: var(--oxblood); font-weight: 300; font-style: italic; }
+  .paper-hero .deck {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 26px;
+    line-height: 1.35;
+    color: var(--ink-2);
+    margin: 28px 0 32px;
+    max-width: 38ch;
+  }
+  .keyspecs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: var(--rule);
+    margin-bottom: 28px;
+  }
+  .keyspec {
+    padding: 16px 20px;
+    border-right: var(--rule);
+    border-bottom: var(--rule);
+  }
+  .keyspec:nth-child(2n) { border-right: 0; }
+  .keyspec:nth-last-child(-n+2) { border-bottom: 0; }
+  .keyspec .k { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-mute); }
+  .keyspec .v { font-family: var(--font-display); font-size: 28px; margin-top: 4px; }
+
+  .acts {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .acts a {
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+    padding: 12px 18px; border: 1px solid var(--ink);
+  }
+  .acts a.primary { background: var(--ink); color: var(--paper); }
+
+  /* spectrum band */
+  .spectrums {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+    border: var(--rule);
+  }
+  .spec-card { padding: 22px 24px; border-right: var(--rule); border-bottom: var(--rule); }
+  .spec-card:nth-child(2n) { border-right: 0; }
+  .spec-card:nth-last-child(-n+2) { border-bottom: 0; }
+  .spec-card .label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-mute); }
+  .spec-card .v { font-family: var(--font-display); font-size: 22px; margin: 6px 0 14px; }
+  .spec-card .v em { color: var(--oxblood); font-style: italic; }
+  .spec-card .scale-bar { height: 1px; background: var(--hairline); position: relative; }
+  .spec-card .scale-bar i { position: absolute; top: -3px; width: 7px; height: 7px; background: var(--ink); border-radius: 50%; transform: translateX(-50%); }
+  .spec-card .scale-bar::before, .spec-card .scale-bar::after { content:""; position:absolute; top:-3px; width:1px; height:7px; background: var(--ink); }
+  .spec-card .scale-bar::before { left: 0; }
+  .spec-card .scale-bar::after { right: 0; }
+  .spec-card .ends { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute); margin-top: 6px; }
+
+  /* with-pens samples */
+  .samples-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .sample-card { background: var(--paper); border: var(--rule); display: flex; flex-direction: column; }
+  .sample-card-head { padding: 14px 18px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: var(--rule); }
+  .sample-card-head .nm { font-family: var(--font-display); font-size: 20px; }
+  .sample-card-head .nm em { color: var(--oxblood); font-style: italic; }
+  .sample-card-head .pen-mini { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute); }
+  .sample-body {
+    height: 220px;
+    position: relative;
+    overflow: hidden;
+    padding: 22px 22px 18px;
+    background: oklch(94% 0.022 90);
+  }
+  .sample-body::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(to bottom, transparent 0 21px, color-mix(in oklch, var(--sapphire) 22%, transparent) 21px 22px);
+    pointer-events: none;
+  }
+  .handwrit {
+    position: relative; z-index: 2;
+    font-family: var(--font-display); font-style: italic;
+    line-height: 22px;
+    color: oklch(28% 0.07 255);
+    opacity: 0.72;
+    letter-spacing: 0.005em;
+  }
+  .handwrit .l { display: block; }
+  .handwrit.thin { font-size: 16px; line-height: 22px; opacity: 0.6; }
+  .handwrit.med  { font-size: 22px; }
+  .handwrit.bold { font-size: 28px; opacity: 0.78; }
+  .sample-card-foot { padding: 12px 18px; border-top: var(--rule); display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sample-card-foot .mm { display: flex; flex-direction: column; gap: 2px; }
+  .sample-card-foot .mm .k { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute); }
+  .sample-card-foot .mm .v { font-family: var(--font-display); font-size: 16px; }
+  .sample-card-foot .mm .v em { color: var(--oxblood); }
+
+  /* related rail */
+  .related-papers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-left: var(--rule);
+    border-top: 1px solid var(--ink);
+  }
+  .related-papers a {
+    border-right: var(--rule); border-bottom: var(--rule);
+    padding: 22px;
+    display: flex; flex-direction: column;
+    background: var(--paper);
+    min-height: 280px;
+  }
+  .related-papers a:hover { background: var(--paper-2); }
+  .related-papers .r-no { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; color: var(--ink-mute); }
+  .related-papers .r-brand { font-family: var(--font-mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-mute); margin-top: 10px; }
+  .related-papers .r-name { font-family: var(--font-display); font-size: 22px; line-height: 1.0; margin-top: 4px; }
+  .mini-swatch { height: 90px; margin-top: auto; margin-bottom: 12px; position: relative; border: var(--rule); overflow: hidden; }
+  .mini-swatch.cream { background: oklch(94% 0.022 90); }
+  .mini-swatch.ivory { background: oklch(96% 0.014 85); }
+  .mini-swatch.bright { background: oklch(98% 0.005 240); }
+  .mini-swatch.laid::after { content:""; position:absolute; inset:0; background-image: repeating-linear-gradient(to right, transparent 0 6px, color-mix(in oklch, var(--ink) 6%, transparent) 6px 7px); }
+  .mini-swatch.dot::after { content:""; position:absolute; inset:0; background-image: radial-gradient(circle, color-mix(in oklch, var(--sapphire) 50%, transparent) 0.7px, transparent 1.2px); background-size: 12px 12px; }
+  .mini-swatch.ruled::after { content:""; position:absolute; inset:0; background-image: repeating-linear-gradient(to bottom, transparent 0 14px, color-mix(in oklch, var(--sapphire) 35%, transparent) 14px 15px); }
+
+  @media (max-width: 1100px) {
+    .paper-hero { grid-template-columns: 1fr; gap: 32px; }
+    .samples-grid { grid-template-columns: 1fr; }
+    .related-papers { grid-template-columns: 1fr 1fr; }
+    .spectrums { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- top bar -->
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <nav class="topbar-nav">
+      <a href="index.html#archive-pens">Pens</a>
+      <a href="index.html#archive-papers">Papers</a>
+      <a href="index.html#pairings">Pairings</a>
+      <a href="index.html#picker">Find a pairing</a>
+      <a href="index.html#compare">Compare</a>
+    </nav>
+    <a href="index.html" class="topbar-mark">Pen &amp; Paper</a>
+    <div class="topbar-meta">
+      <span><span class="dot"></span>Specimen</span>
+      <span>The Paper Archive</span>
+      <span>Search ⌘K</span>
+    </div>
+  </div>
+</header>
+
+<!-- breadcrumb -->
+<div class="wrap">
+  <nav class="breadcrumb">
+    <span><a href="index.html">Almanac</a> &nbsp;·&nbsp; <a href="index.html#archive-papers">Paper Archive</a> &nbsp;·&nbsp; <span class="crumb-mid">№ 001 — Tomoe River S</span></span>
+    <span>1 / 140 &nbsp;·&nbsp; <a href="#" style="text-decoration: underline;">← Prev</a> &nbsp;&nbsp; <a href="#" style="text-decoration: underline;">Next →</a></span>
+  </nav>
+</div>
+
+<!-- hero -->
+<div class="wrap">
+  <section class="paper-hero">
+    <div class="paper-hero-visual slot-frame">
+      <image-slot id="paper-page-hero" class="hero-slot" shape="rect" placeholder="Drop a photograph of the Tomoe River sheet"></image-slot>
+      <span class="placeholder-corner" style="background: var(--paper);">PAPER · 1:1 · A5</span>
+    </div>
+    <div>
+      <div class="paper-hero-eyebrow mono">
+        <span>№ 001 · Paper of the Archive</span>
+        <span>52 GSM · CREAM</span>
+        <span>From €8 / pad</span>
+      </div>
+      <div class="mono" style="color: var(--oxblood); margin-bottom: 16px;">● Editor's Choice — Sheen</div>
+      <h1>Tomoe<br>River <em>S</em><br>52 gsm</h1>
+      <div class="mono" style="margin-top: 28px;">Tomoegawa · Shizuoka, Japan · est. 1914</div>
+      <p class="deck">An impossibly thin sheet that refuses to bleed — the gold standard for the wettest, sheeniest inks in the cupboard.</p>
+
+      <div class="keyspecs">
+        <div class="keyspec"><div class="k">Weight</div><div class="v">52 gsm</div></div>
+        <div class="keyspec"><div class="k">Tooth</div><div class="v">Glass</div></div>
+        <div class="keyspec"><div class="k">Sheen</div><div class="v">Marked</div></div>
+        <div class="keyspec"><div class="k">Bleed</div><div class="v">Nil</div></div>
+        <div class="keyspec"><div class="k">Tone</div><div class="v">Cream</div></div>
+        <div class="keyspec"><div class="k">Dry time</div><div class="v">38 s</div></div>
+      </div>
+
+      <div class="acts">
+        <a href="#pairings-here" class="primary">See its pairings →</a>
+        <a href="index.html#compare">Add to compare</a>
+        <a href="#">Save to archive</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- spectrums -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · ATTRIBUTES SECTION
+  Six grouped cards, one per schema sub-object on `Paper` (CLAUDE.md §4):
+      i.   Identity & Provenance       → top-level paper fields + paper.mill
+      ii.  Substance & Composition     → paper.substance.*
+      iii. Surface & Finish            → paper.surface.*
+      iv.  Behaviour with Ink          → paper.performance.* (1-5 scores)
+      v.   Dry Time · by Nib            → paper.performance.dryTimeSecByNib.*
+      vi.  Format, Binding & Sizes      → paper.format.* + paper.performance.bestForFlow
+                                          + .bestForNibSize
+
+  Spectrum-bar dot positions (`<i style="left:NN%">`) map normalized scores
+  to percent. A 1–5 score multiplied by 20 yields the percent. A 0–100 score
+  is used directly.
+
+  Each <span class="tag primary"> in the Format group represents an entry
+  from paper.format.sizesAvailable[], .rulingsAvailable[], or paper.performance.bestForNibSize[].
+  Render as a loop with .primary applied to currently-stocked items.
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="attributes">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 01 · Attributes</span>
+      <h2 class="section-title">The <em>sheet</em>, by every measure.</h2>
+      <span class="section-kicker">All readings under standard lab conditions — 21 °C, 50 % RH, Iroshizuku Tsuki-yo on a Medium 14k.</span>
+    </div>
+
+    <div class="attr-groups">
+
+      <!-- Identity & Provenance -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Identity <em>&amp;</em> Provenance</span>
+          <span class="num">i.</span>
+        </div>
+        <p class="attr-group-lede">The mill, the lineage, and the line this sheet belongs to.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">Brand</span><span class="value">Tomoegawa</span></div>
+          <div class="attr-line"><span class="label">Mill (current)</span><span class="value">Sanzen Paper Co.</span></div>
+          <div class="attr-line"><span class="label">Model</span><span class="value">Tomoe River S</span></div>
+          <div class="attr-line"><span class="label">Variant</span><span class="value">Loose A5 · 100 sheets</span></div>
+          <div class="attr-line"><span class="label">Succeeds</span><span class="value">Tomoe River (original, 2019†)</span></div>
+          <div class="attr-line"><span class="label">Country</span><span class="value">Japan</span></div>
+          <div class="attr-line"><span class="label">Mill location</span><span class="value">Shizuoka Prefecture</span></div>
+          <div class="attr-line"><span class="label">Year introduced</span><span class="value">2019 (S revision)</span></div>
+          <div class="attr-line"><span class="label">Archive number</span><span class="value">№ 001 / 140</span></div>
+          <div class="attr-line"><span class="label">Status</span><span class="value">In production · <em>widely stocked</em></span></div>
+        </div>
+      </div>
+
+      <!-- Substance & Composition -->
+      <div class="attr-group tall">
+        <div class="attr-group-head">
+          <span class="ttl">Substance <em>&amp;</em> Composition</span>
+          <span class="num">ii.</span>
+        </div>
+        <p class="attr-group-lede">What the sheet is made of, how thick it is, and how much light passes through.</p>
+        <div class="attr-list">
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Weight</span><span class="value">52 gsm <span class="tag">very thin</span></span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:0%"></i></div>
+              <div class="ends"><span>40</span><span>80</span><span>100</span><span>120</span><span>160</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Caliper</span><span class="value">53 µm</span></div>
+          <div class="attr-line"><span class="label">Bulk</span><span class="value">1.02 cm³ / g</span></div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Opacity</span><span class="value">3 / 10 — translucent</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:28%"></i></div>
+              <div class="ends"><span>Sheer</span><span>Translucent</span><span>Solid</span><span>Opaque</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Pulp source</span><span class="value">Wood pulp · ECF-bleached</span></div>
+          <div class="attr-line"><span class="label">Cotton content</span><span class="value">0 %</span></div>
+          <div class="attr-line"><span class="label">Recycled content</span><span class="value">0 %</span></div>
+          <div class="attr-line"><span class="label">Acid-free</span><span class="value">Yes</span></div>
+          <div class="attr-line"><span class="label">Archival</span><span class="value">Yes — ISO 9706</span></div>
+          <div class="attr-line"><span class="label">pH</span><span class="value">7.2 — slightly alkaline</span></div>
+          <div class="attr-line"><span class="label">Lignin</span><span class="value">Trace</span></div>
+          <div class="attr-line"><span class="label">Ash content</span><span class="value">12 % · calcium carbonate</span></div>
+          <div class="attr-line"><span class="label">Brightness (CIE)</span><span class="value">82</span></div>
+          <div class="attr-line"><span class="label">Brightness (ISO)</span><span class="value">78</span></div>
+          <div class="attr-line"><span class="label">L* / a* / b*</span><span class="value">93.4 / 1.1 / 8.6</span></div>
+          <div class="attr-line"><span class="label">Optical brighteners (OBA)</span><span class="value">None</span></div>
+          <div class="attr-line"><span class="label">Tone family</span><span class="value">Cream <em>·</em> warm</span></div>
+        </div>
+      </div>
+
+      <!-- Surface & Finish -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Surface <em>&amp;</em> Finish</span>
+          <span class="num">iii.</span>
+        </div>
+        <p class="attr-group-lede">What the nib feels under the hand — and what keeps the ink on top.</p>
+        <div class="attr-list">
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Tooth</span><span class="value">Glass · 1 / 10</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:6%"></i></div>
+              <div class="ends"><span>Glass</span><span>Smooth</span><span>Soft tooth</span><span>Toothy</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Finish</span><span class="value">Wove · calendered</span></div>
+          <div class="attr-line"><span class="label">Bekk smoothness</span><span class="value">2 400 sec · very smooth</span></div>
+          <div class="attr-line"><span class="label">Sheffield smoothness</span><span class="value">25 · polished</span></div>
+          <div class="attr-line"><span class="label">Gurley porosity</span><span class="value">1 800 sec / 100 ml · closed</span></div>
+          <div class="attr-line"><span class="label">Cobb (60 s)</span><span class="value">14 g / m² · low absorbency</span></div>
+          <div class="attr-line"><span class="label">Gloss (75°)</span><span class="value">8 % · matte-satin</span></div>
+          <div class="attr-line"><span class="label">Surface direction</span><span class="value">Felt side · uniform</span></div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Sizing</span><span class="value">Extreme surface</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:92%"></i></div>
+              <div class="ends"><span>None</span><span>Light</span><span>Heavy</span><span>Extreme</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Coating</span><span class="value">Uncoated · sized</span></div>
+          <div class="attr-line"><span class="label">Hygroscopy</span><span class="value">High — store sealed</span></div>
+          <div class="attr-line"><span class="label">Moisture content</span><span class="value">4.8 % · at 50 % RH</span></div>
+          <div class="attr-line"><span class="label">Grain direction</span><span class="value">Long-grain · vertical</span></div>
+          <div class="attr-line"><span class="label">Deckle edge</span><span class="value">None — machine-cut</span></div>
+        </div>
+      </div>
+
+      <!-- Behaviour with Ink -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Behaviour <em>with Ink</em></span>
+          <span class="num">iv.</span>
+        </div>
+        <p class="attr-group-lede">Feathering, bleed, ghosting, sheen, shading — measured against the catalogue's distribution.</p>
+        <div class="attr-list">
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Feathering</span><span class="value">1 / 5 — nil</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:8%"></i></div>
+              <div class="ends"><span>Nil</span><span>Trace</span><span>Visible</span><span>Heavy</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Bleed-through</span><span class="value">1 / 5 — none</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:6%"></i></div>
+              <div class="ends"><span>None</span><span>Pinpoint</span><span>Spots</span><span>Soaks</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Show-through (ghost)</span><span class="value">4 / 5 — heavy</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:78%"></i></div>
+              <div class="ends"><span>None</span><span>Slight</span><span>Moderate</span><span>Heavy</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Sheen visibility</span><span class="value">5 / 5 — pronounced</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:96%"></i></div>
+              <div class="ends"><span>Matte</span><span>Visible</span><span>Pronounced</span><span>Mirror</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Shading visibility</span><span class="value">5 / 5 — vivid</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:92%"></i></div>
+              <div class="ends"><span>Flat</span><span>Modest</span><span>Visible</span><span>Vivid</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Shimmer visibility</span><span class="value">5 / 5</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:94%"></i></div>
+              <div class="ends"><span>Lost</span><span>Visible</span><span>Pronounced</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dry time, by nib size -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Dry Time <em>·</em> by Nib</span>
+          <span class="num">v.</span>
+        </div>
+        <p class="attr-group-lede">Seconds to a smudge-free pass. Standard ink: Iroshizuku Tsuki-yo, room conditions.</p>
+        <div class="attr-list">
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Extra-fine (EF)</span><span class="value">22 s</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:44%"></i></div>
+              <div class="ends"><span>5 s</span><span>30 s</span><span>60 s</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Fine (F)</span><span class="value">28 s</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:56%"></i></div>
+              <div class="ends"><span>5 s</span><span>30 s</span><span>60 s</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Medium (M)</span><span class="value">38 s</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:74%"></i></div>
+              <div class="ends"><span>5 s</span><span>30 s</span><span>60 s</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Broad (B)</span><span class="value">48 s</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:88%"></i></div>
+              <div class="ends"><span>5 s</span><span>30 s</span><span>60 s</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Left-hand viable</span><span class="value">With patience · or EF only</span></div>
+          <div class="attr-line"><span class="label">Double-sided</span><span class="value">Yes — ghosting accepted</span></div>
+        </div>
+      </div>
+
+      <!-- Watermark & Texture -->
+      <!--
+        ════════════════════════════════════════════════════════════════════════════
+        CLAUDE CODE · attr-group `Watermark & Texture` → paper.texture (new sub-object)
+        ════════════════════════════════════════════════════════════════════════════
+      -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Watermark <em>&amp;</em> Texture</span>
+          <span class="num">vi.</span>
+        </div>
+        <p class="attr-group-lede">What the sheet shows against the light, and what the hand reads of its surface.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">Watermark</span><span class="value">None</span></div>
+          <div class="attr-line"><span class="label">Chain lines</span><span class="value">Not visible</span></div>
+          <div class="attr-line"><span class="label">Laid lines</span><span class="value">Not visible — wove sheet</span></div>
+          <div class="attr-line"><span class="label">Formation</span><span class="value">Uniform · cloud-free against the lamp</span></div>
+          <div class="attr-line"><span class="label">Felt side</span><span class="value">Uniform · no preferred side</span></div>
+          <div class="attr-line"><span class="label">Wire side</span><span class="value">Calendered to match</span></div>
+          <div class="attr-line"><span class="label">Texture rating</span><span class="value">Glass · 1 / 10</span></div>
+          <div class="attr-line"><span class="label">Embossing</span><span class="value">None</span></div>
+          <div class="attr-line"><span class="label">Edge treatment</span><span class="value">Square cut · no deckle</span></div>
+        </div>
+      </div>
+
+      <!-- Mill & Heritage -->
+      <!--
+        ════════════════════════════════════════════════════════════════════════════
+        CLAUDE CODE · attr-group `Mill & Heritage` → paper.heritage (new sub-object)
+        ════════════════════════════════════════════════════════════════════════════
+      -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Mill <em>&amp;</em> Heritage</span>
+          <span class="num">vii.</span>
+        </div>
+        <p class="attr-group-lede">The mill, the machine, the certifications — and the story of the predecessor sheet.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">Mill founded</span><span class="value">1914</span></div>
+          <div class="attr-line"><span class="label">Original maker</span><span class="value">Tomoegawa Co. Ltd</span></div>
+          <div class="attr-line"><span class="label">Current maker</span><span class="value">Sanzen Paper Co. (2019–)</span></div>
+          <div class="attr-line"><span class="label">Machine type</span><span class="value">Fourdrinier — narrow web</span></div>
+          <div class="attr-line"><span class="label">Machine speed</span><span class="value">~ 380 m / min</span></div>
+          <div class="attr-line"><span class="label">Predecessor sheet</span><span class="value">Tomoe River (original, 2019†)</span></div>
+          <div class="attr-line"><span class="label">FSC certification</span><span class="value">Yes — Mix · FSC-C012345</span></div>
+          <div class="attr-line"><span class="label">PEFC</span><span class="value">No</span></div>
+          <div class="attr-line"><span class="label">ISO 9706 archival</span><span class="value">Certified</span></div>
+          <div class="attr-line"><span class="label">Carbon footprint</span><span class="value">~ 0.86 kg CO₂e / kg</span></div>
+          <div class="attr-line"><span class="label">Pulping</span><span class="value">ECF · elemental-chlorine-free</span></div>
+        </div>
+      </div>
+
+      <!-- Format, Binding, Sizes -->
+      <div class="attr-group wide">
+        <div class="attr-group-head">
+          <span class="ttl">Format, Binding <em>&amp;</em> Sizes</span>
+          <span class="num">viii.</span>
+        </div>
+        <p class="attr-group-lede">How the sheet is sold, bound, ruled — and in what sizes.</p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+          <div class="attr-list">
+            <div class="attr-line"><span class="label">Format kind</span><span class="value">Loose-leaf · pad</span></div>
+            <div class="attr-line"><span class="label">Sheet count</span><span class="value">100</span></div>
+            <div class="attr-line"><span class="label">Binding</span><span class="value">Gummed top · padded</span></div>
+            <div class="attr-line"><span class="label">Lays flat</span><span class="value">Yes — fully</span></div>
+            <div class="attr-line"><span class="label">Cover</span><span class="value">Card backer · no front</span></div>
+            <div class="attr-line"><span class="label">Perforation</span><span class="value">None</span></div>
+          </div>
+          <div>
+            <div class="attr-line" style="border-bottom:0;"><span class="label">Sizes available</span></div>
+            <div class="attr-tag-row">
+              <span class="tag primary">A5</span>
+              <span class="tag primary">A4</span>
+              <span class="tag">A6</span>
+              <span class="tag">B5</span>
+              <span class="tag">Letter</span>
+              <span class="tag">Roll · 36 cm</span>
+            </div>
+            <div class="attr-line" style="border-bottom:0; padding-top: 18px;"><span class="label">Rulings available</span></div>
+            <div class="attr-tag-row">
+              <span class="tag primary">Blank</span>
+              <span class="tag">Ruled · 6 mm</span>
+              <span class="tag">Dot · 5 mm</span>
+              <span class="tag">Grid · 5 mm</span>
+            </div>
+            <div class="attr-line" style="border-bottom:0; padding-top: 18px;"><span class="label">Dimensions (A5)</span></div>
+            <div style="font-family: var(--font-display); font-size: 19px; padding-top: 4px;">148 × 210 mm</div>
+          </div>
+          <div>
+            <div class="attr-line" style="border-bottom:0;"><span class="label">Best for nib size</span></div>
+            <div class="attr-tag-row">
+              <span class="tag primary">M</span>
+              <span class="tag primary">B</span>
+              <span class="tag primary">BB</span>
+              <span class="tag">Stub</span>
+              <span class="tag">Flex</span>
+            </div>
+            <div class="attr-line" style="border-bottom:0; padding-top: 18px;"><span class="label">Best for ink flow</span></div>
+            <div class="attr-tag-row">
+              <span class="tag primary">Wet</span>
+              <span class="tag primary">Very wet</span>
+              <span class="tag">Medium</span>
+            </div>
+            <div class="attr-line" style="border-bottom:0; padding-top: 18px;"><span class="label">Avoid for</span></div>
+            <div class="attr-tag-row">
+              <span class="tag">Pencil work</span>
+              <span class="tag">Hard pressure</span>
+              <span class="tag">Heavy erasing</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Editor's strip -->
+    <div class="editor-strip">
+      <div>
+        <h4>Editor's note · A. Reber</h4>
+        <p class="quote">A paper that exists because some inks needed somewhere to go. Reserve for the ones whose second colour — the sheen — is the whole point.</p>
+      </div>
+      <div>
+        <h4>Care notes</h4>
+        <ul>
+          <li><span>Store sealed</span><span class="lk">→ humidity</span></li>
+          <li><span>Keep flat</span><span class="lk">→ curl</span></li>
+          <li><span>Don't fold</span><span class="lk">→ creases set</span></li>
+          <li><span>Allow 60 s</span><span class="lk">→ wet inks</span></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Pricing</h4>
+        <p style="font-family: var(--font-display); font-size: 24px; line-height: 1.3; margin-bottom: 8px;">€ 8 · A5 pad of 100<br>€ 22 · A4 pad of 100</p>
+        <p style="font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; color: var(--ink-mute); text-transform: uppercase;">Tier I · ~ €0.08 per sheet</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- the same paper, three pens -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · WRITING-SAMPLE GRID
+  Three cards demonstrating different pens on this same paper.
+  Source: paper.affinityScores (top 3 penIds desc), then join to pen records.
+  Field map:
+     .nm "Custom 823 · 14k M"    → pen.model + " · " + pen.nib.material
+                                    + " " + pen.nib.size
+     .pen-mini "Wet · Soft"      → pen.inkDelivery.flow + " · " + pen.nib.flex
+     .handwrit class             → "bold" if pen.nib.sizeNormalized in {B,BB,BBB},
+                                    "med" for {M,MF}, "thin" for {UEF,EF,F}
+     foot Affinity               → paper.affinityScores[pen.id]
+     foot Sheen                  → "Marked" / "Visible" / "Quiet" / "None"
+                                    bucketed from paper.performance.sheenVisibility
+     foot Ghost                  → bucketed from paper.performance.showThroughTendency
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="on-pens">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 02 · On the Page</span>
+      <h2 class="section-title">The same <em>paper</em>, three different pens.</h2>
+      <span class="section-kicker">All samples in Iroshizuku Tsuki-yo, indoor 2700K. Affinity scored against this sheet.</span>
+    </div>
+
+    <div class="samples-grid">
+      <article class="sample-card">
+        <div class="sample-card-head"><span class="nm">Custom 823 <em>·</em> 14k M</span><span class="pen-mini">Wet · Soft</span></div>
+        <div class="sample-body">
+          <div class="handwrit bold">
+            <span class="l">A letter, weighed in light;</span>
+            <span class="l">the cobalt sits and flashes copper.</span>
+          </div>
+        </div>
+        <div class="sample-card-foot">
+          <div class="mm"><span class="k">Affinity</span><span class="v"><em>94</em></span></div>
+          <div class="mm"><span class="k">Sheen</span><span class="v">Marked</span></div>
+          <div class="mm"><span class="k">Ghost</span><span class="v">Visible</span></div>
+        </div>
+      </article>
+
+      <article class="sample-card">
+        <div class="sample-card-head"><span class="nm">Lamy 2000 <em>·</em> 14k F</span><span class="pen-mini">Dry · Rigid</span></div>
+        <div class="sample-body">
+          <div class="handwrit med">
+            <span class="l">— a sober line, neatly held,</span>
+            <span class="l">no railroad, no flood,</span>
+            <span class="l">tuesday's small accountings.</span>
+          </div>
+        </div>
+        <div class="sample-card-foot">
+          <div class="mm"><span class="k">Affinity</span><span class="v"><em>74</em></span></div>
+          <div class="mm"><span class="k">Sheen</span><span class="v">Quiet</span></div>
+          <div class="mm"><span class="k">Ghost</span><span class="v">Moderate</span></div>
+        </div>
+      </article>
+
+      <article class="sample-card">
+        <div class="sample-card-head"><span class="nm">Platinum 3776 <em>·</em> UEF</span><span class="pen-mini">Dry · Rigid</span></div>
+        <div class="sample-body">
+          <div class="handwrit thin">
+            <span class="l">— the finest possible thread,</span>
+            <span class="l">an architect's hand on holiday,</span>
+            <span class="l">marginalia of an afternoon's reading,</span>
+            <span class="l">and four more lines below.</span>
+          </div>
+        </div>
+        <div class="sample-card-foot">
+          <div class="mm"><span class="k">Affinity</span><span class="v"><em>82</em></span></div>
+          <div class="mm"><span class="k">Sheen</span><span class="v">Visible</span></div>
+          <div class="mm"><span class="k">Ghost</span><span class="v">Heavy</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- recommended pairings -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · RECOMMENDED PAIRINGS
+  Lists pairings featuring THIS paper. Source:
+      GET /api/pairings?paperId=:id&sort=affinityScore&limit=3
+  Each .picker-result card field map:
+     .pr-rank          → i. ii. iii.
+     .pr-title         → pairing.pen.model + " × " + pairing.paper.model
+     .pr-sub           → pairing.editorial.headline
+     .pr-score number  → pairing.affinityScore
+     href              → /pairings/:pairing.id
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="pairings-here">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 03 · Recommended Marriages</span>
+      <h2 class="section-title">Pairings featuring <em>Tomoe River</em>.</h2>
+      <span class="section-kicker">From the catalog. Sorted by affinity.</span>
+    </div>
+
+    <div class="picker-results" style="border-left:0; border-right:0;">
+      <a href="index.html#pairings" class="picker-result">
+        <span class="pr-rank">i.</span>
+        <div>
+          <div class="pr-title">Custom 823 <em>×</em> Tomoe River</div>
+          <div class="pr-sub">A wet vacuum-filler finds its translucent altar.</div>
+        </div>
+        <div class="pr-score"><span class="lbl">Affinity</span>94</div>
+      </a>
+      <a href="index.html#pairings" class="picker-result">
+        <span class="pr-rank">ii.</span>
+        <div>
+          <div class="pr-title">Sailor Pro Gear <em>×</em> Tomoe River</div>
+          <div class="pr-sub">Feedback nib over thin paper — for the keepers among letters.</div>
+        </div>
+        <div class="pr-score"><span class="lbl">Affinity</span>89</div>
+      </a>
+      <a href="index.html#pairings" class="picker-result">
+        <span class="pr-rank">iii.</span>
+        <div>
+          <div class="pr-title">Aurora 88 <em>×</em> Tomoe River</div>
+          <div class="pr-sub">A drier Italian fine that lets the paper's sheen do the talking.</div>
+        </div>
+        <div class="pr-score"><span class="lbl">Affinity</span>83</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- related papers -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · RELATED PAPERS RAIL
+  Other papers of kindred temperament. Source:
+      GET /api/papers?related-to=:id&limit=4
+  Sort heuristic: similar surface.tooth + sizing + performance.sheenVisibility.
+  Each tile field map:
+     .r-no            → "№ " + paper.archiveNumber
+     .r-brand         → paper.brand + " · " + paper.countryOfOrigin
+     .r-name          → paper.model
+     .mini-swatch class → paper.appearance.swatchClass
+                          + " " + paper.appearance.overlayPattern
+     href             → /papers/:paper.id
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="related">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 04 · Also in the Cupboard</span>
+      <h2 class="section-title">Sheets of <em>kindred</em> temperament.</h2>
+      <span class="section-kicker">Other smooth, sized, sheen-friendly papers in the archive.</span>
+    </div>
+
+    <div class="related-papers">
+      <a href="paper.html">
+        <span class="r-no">№ 014</span>
+        <span class="r-brand">Rhodia · France</span>
+        <span class="r-name">№ 16 Dot Pad</span>
+        <div class="mini-swatch bright dot"></div>
+      </a>
+      <a href="paper.html">
+        <span class="r-no">№ 027</span>
+        <span class="r-brand">Clairefontaine · France</span>
+        <span class="r-name">Triomphe</span>
+        <div class="mini-swatch bright"></div>
+      </a>
+      <a href="paper.html">
+        <span class="r-no">№ 071</span>
+        <span class="r-brand">Apica · Japan</span>
+        <span class="r-name">CD Premium</span>
+        <div class="mini-swatch ivory ruled"></div>
+      </a>
+      <a href="paper.html">
+        <span class="r-no">№ 008</span>
+        <span class="r-brand">Midori · Japan</span>
+        <span class="r-name">MD Notebook</span>
+        <div class="mini-swatch ivory ruled"></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- colophon -->
+<footer class="colophon">
+  <div class="wrap">
+    <div class="colophon-grid">
+      <div>
+        <div class="colophon-mark">Pen<span style="color: var(--oxblood); font-style: italic; padding: 0 .04em;">&amp;</span>Paper</div>
+        <p>A pairing almanac for the fountain pen and its proper page. Published quarterly, in Kyōto and Vienna.</p>
+      </div>
+      <div>
+        <h4>The Archive</h4>
+        <ul>
+          <li><a href="index.html#archive-pens">172 Pens</a></li>
+          <li><a href="index.html#archive-papers">140 Papers</a></li>
+          <li><a href="index.html#pairings">48 Pairings</a></li>
+          <li><a href="index.html#compare">Compare Specimens</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>This Specimen</h4>
+        <ul>
+          <li><a href="#attributes">Attributes</a></li>
+          <li><a href="#on-pens">Writing samples</a></li>
+          <li><a href="#pairings-here">Recommended marriages</a></li>
+          <li><a href="#related">Related papers</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Return</h4>
+        <p style="margin-bottom: 14px;">Back to the full Almanac, or the Paper Archive.</p>
+        <a href="index.html" style="font-family: var(--font-display); font-size: 22px; border-bottom: 1px solid var(--ink); padding-bottom: 4px; font-style: italic;">← To the Almanac</a>
+      </div>
+    </div>
+    <div class="colophon-foot">
+      <span>© MMXXVI Pen &amp; Paper</span>
+      <span>Specimen № 001 · Tomoe River S</span>
+      <span>Issue IV · 02 · Spring</span>
+    </div>
+  </div>
+</footer>
+
+<script src="search.js" defer></script>
+</body>
+</html>

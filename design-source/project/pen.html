@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pilot Custom 823 — Pen &amp; Paper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · pen.html
+  This page is the dedicated single-pen detail view. Route: /pens/:id
+  Every value below the topbar is HARD-CODED SAMPLE DATA for the
+  Pilot Custom 823. Replace with payload from:
+      GET /api/pens/:id   →   Pen   (see CLAUDE.md §3)
+
+  Page-wide field map for the hero block:
+    breadcrumb "№ 003 — Custom 823" → "№ " + pen.archiveNumber + " — " + pen.model
+    breadcrumb "3 / 172"             → pen.archiveNumber + " / " + totalPens
+    eyebrow "Tier III"               → "Tier " + pen.pricing.priceTier
+    eyebrow "$ 360"                  → currency-formatted pen.pricing.msrpUsd
+    badge "● In the Editor's Drawer" → pen.editorial.editorPick ? badge : null
+    H1 "Custom 823 / Amber / Demo"   → pen.model + pen.variant (split on space)
+    sub-line "Pilot · Hiratsuka …"   → pen.brand + " · " + pen.cityOfOrigin
+                                       + ", " + pen.countryOfOrigin
+                                       + " · est. " + pen.yearIntroduced
+    deck (italic paragraph)          → pen.editorial.deck
+
+  IMAGE-SLOT NOTICE:
+  Every <image-slot id="…"> is a DESIGN-TIME placeholder backed by
+  image-slot.js. In production, replace with <img src="…CDN URL…">.
+  The slot id maps to pen.photos.<field>. On this page:
+      id="pen-page-hero" → pen.photos.hero
+  All product photos MUST be transparent PNGs (CLAUDE.md §2).
+-->
+<script src="image-slot.js"></script>
+<style>
+  .breadcrumb {
+    border-bottom: var(--rule);
+    padding: 18px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .breadcrumb a:hover { color: var(--ink); }
+  .breadcrumb .crumb-mid { color: var(--ink); }
+
+  .pen-hero {
+    padding: 56px 0 88px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 72px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .pen-hero-visual {
+    aspect-ratio: 3/4;
+    background: var(--paper-2);
+    border: var(--rule);
+    position: relative;
+  }
+  .pen-hero-eyebrow {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 18px;
+    border-bottom: var(--rule);
+    margin-bottom: 28px;
+  }
+  .pen-hero h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(72px, 9vw, 144px);
+    line-height: 0.86;
+    letter-spacing: -0.025em;
+  }
+  .pen-hero h1 em { color: var(--oxblood); font-weight: 300; font-style: italic; }
+  .pen-hero .deck {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 26px;
+    line-height: 1.35;
+    color: var(--ink-2);
+    margin: 28px 0 32px;
+    max-width: 38ch;
+  }
+  .keyspecs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: var(--rule);
+    margin-bottom: 28px;
+  }
+  .keyspec {
+    padding: 16px 20px;
+    border-right: var(--rule);
+    border-bottom: var(--rule);
+  }
+  .keyspec:nth-child(2n) { border-right: 0; }
+  .keyspec:nth-last-child(-n+2) { border-bottom: 0; }
+  .keyspec .k {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .keyspec .v {
+    font-family: var(--font-display);
+    font-size: 28px;
+    margin-top: 4px;
+  }
+
+  .acts {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .acts a {
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+    padding: 12px 18px; border: 1px solid var(--ink);
+  }
+  .acts a.primary { background: var(--ink); color: var(--paper); }
+
+  /* writing samples on different papers */
+  .samples-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .sample-card {
+    background: var(--paper);
+    border: var(--rule);
+    display: flex; flex-direction: column;
+  }
+  .sample-card-head {
+    padding: 14px 18px;
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: var(--rule);
+  }
+  .sample-card-head .nm { font-family: var(--font-display); font-size: 20px; }
+  .sample-card-head .nm em { color: var(--oxblood); font-style: italic; }
+  .sample-card-head .gsm { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute); }
+  .sample-body {
+    height: 220px;
+    position: relative;
+    overflow: hidden;
+    padding: 18px;
+  }
+  .sample-body.tomoe { background: oklch(94% 0.022 90); }
+  .sample-body.tomoe::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(to bottom, transparent 0 21px, color-mix(in oklch, var(--sapphire) 24%, transparent) 21px 22px);
+  }
+  .sample-body.rhodia { background: oklch(98% 0.005 240); }
+  .sample-body.rhodia::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(circle, color-mix(in oklch, var(--sapphire) 40%, transparent) 0.7px, transparent 1.2px);
+    background-size: 14px 14px;
+  }
+  .sample-body.crown { background: oklch(94% 0.022 90); }
+  .sample-body.crown::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(to right, transparent 0 7px, color-mix(in oklch, var(--ink) 6%, transparent) 7px 8px);
+  }
+  .handwrit {
+    position: relative; z-index: 2;
+    font-family: var(--font-display); font-style: italic; font-size: 24px; line-height: 22px;
+    color: oklch(28% 0.07 255);
+    opacity: 0.7;
+    letter-spacing: 0.005em;
+  }
+  .handwrit .l { display: block; }
+  .sample-card-foot {
+    padding: 12px 18px;
+    border-top: var(--rule);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .sample-card-foot .mm { display: flex; flex-direction: column; gap: 2px; }
+  .sample-card-foot .mm .k { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute); }
+  .sample-card-foot .mm .v { font-family: var(--font-display); font-size: 16px; }
+  .sample-card-foot .mm .v em { color: var(--oxblood); }
+
+  /* related rail */
+  .related {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-left: var(--rule);
+    border-top: 1px solid var(--ink);
+  }
+  .related a {
+    border-right: var(--rule); border-bottom: var(--rule);
+    padding: 22px;
+    display: flex; flex-direction: column;
+    background: var(--paper);
+    min-height: 220px;
+  }
+  .related a:hover { background: var(--paper-2); }
+  .related .r-no { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; color: var(--ink-mute); }
+  .related .r-brand { font-family: var(--font-mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-mute); margin-top: 14px; }
+  .related .r-name { font-family: var(--font-display); font-size: 22px; line-height: 1.0; margin-top: 4px; }
+  .related svg { width: 100%; height: auto; margin-top: auto; margin-bottom: 12px; }
+
+  @media (max-width: 1100px) {
+    .pen-hero { grid-template-columns: 1fr; gap: 32px; }
+    .samples-grid { grid-template-columns: 1fr; }
+    .related { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- pen silhouettes (shared) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="pen-classic" viewBox="0 0 240 40">
+      <path d="M2 20 Q2 14 8 14 L94 14 L96 12 L96 28 L94 26 L8 26 Q2 26 2 20Z" fill="currentColor"/>
+      <rect x="20" y="6" width="2" height="14" fill="currentColor"/>
+      <circle cx="21" cy="5" r="2" fill="currentColor"/>
+      <rect x="88" y="14" width="3" height="12" fill="var(--paper)"/>
+      <rect x="84" y="14" width="2" height="12" fill="var(--paper)"/>
+      <path d="M96 12 L196 12 Q204 12 208 16 L222 20 L208 24 Q204 28 196 28 L96 28 Z" fill="currentColor"/>
+      <path d="M222 20 L236 19.5 L238 20 L236 20.5 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="pen-flat" viewBox="0 0 240 40">
+      <rect x="2" y="14" width="92" height="12" fill="currentColor"/>
+      <rect x="18" y="8" width="2" height="12" fill="currentColor"/>
+      <circle cx="19" cy="6.5" r="1.8" fill="currentColor"/>
+      <rect x="86" y="14" width="2" height="12" fill="var(--paper)"/>
+      <rect x="94" y="14" width="110" height="12" fill="currentColor"/>
+      <path d="M204 14 L220 18 L222 20 L220 22 L204 26 Z" fill="currentColor"/>
+      <path d="M222 20 L236 19.5 L238 20 L236 20.5 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="pen-cigar" viewBox="0 0 240 40">
+      <path d="M6 20 Q6 14 14 14 L92 14 L96 12 L96 28 L92 26 L14 26 Q6 26 6 20Z" fill="currentColor"/>
+      <rect x="22" y="7" width="2" height="13" fill="currentColor"/>
+      <circle cx="23" cy="6" r="1.8" fill="currentColor"/>
+      <rect x="86" y="14" width="3" height="12" fill="var(--paper)"/>
+      <path d="M96 12 Q96 12 100 12 L200 12 Q212 12 218 18 L228 20 L218 22 Q212 28 200 28 L100 28 Q96 28 96 28 Z" fill="currentColor"/>
+      <path d="M228 20 L237 19.5 L239 20 L237 20.5 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="pen-vintage" viewBox="0 0 240 40">
+      <path d="M0 20 L4 16 Q6 14 12 14 L92 14 L94 12 L94 28 L92 26 L12 26 Q6 26 4 24 Z" fill="currentColor"/>
+      <rect x="22" y="6" width="2" height="14" fill="currentColor"/>
+      <rect x="84" y="14" width="2" height="12" fill="var(--paper)"/>
+      <path d="M94 12 L196 12 Q208 14 218 18 L230 20 L218 22 Q208 26 196 28 L94 28 Z" fill="currentColor"/>
+      <path d="M230 20 L240 20 L238 21 L236 20.4 Z" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- top bar -->
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <nav class="topbar-nav">
+      <a href="index.html#archive-pens">Pens</a>
+      <a href="index.html#archive-papers">Papers</a>
+      <a href="index.html#pairings">Pairings</a>
+      <a href="index.html#picker">Find a pairing</a>
+      <a href="index.html#compare">Compare</a>
+    </nav>
+    <a href="index.html" class="topbar-mark">Pen &amp; Paper</a>
+    <div class="topbar-meta">
+      <span><span class="dot"></span>Specimen</span>
+      <span>The Pen Archive</span>
+      <span>Search ⌘K</span>
+    </div>
+  </div>
+</header>
+
+<!-- breadcrumb -->
+<div class="wrap">
+  <nav class="breadcrumb">
+    <span><a href="index.html">Almanac</a> &nbsp;·&nbsp; <a href="index.html#archive-pens">Pen Archive</a> &nbsp;·&nbsp; <span class="crumb-mid">№ 003 — Custom 823</span></span>
+    <span>3 / 172 &nbsp;·&nbsp; <a href="#" style="text-decoration: underline;">← Prev</a> &nbsp;&nbsp; <a href="#" style="text-decoration: underline;">Next →</a></span>
+  </nav>
+</div>
+
+<!-- hero -->
+<div class="wrap">
+  <section class="pen-hero">
+    <div class="pen-hero-visual slot-frame">
+      <image-slot id="pen-page-hero" class="hero-slot" shape="rect" placeholder="Drop a hero photograph of the Custom 823"></image-slot>
+      <span class="placeholder-corner">PEN · 1:1 · UNCAPPED</span>
+    </div>
+    <div>
+      <div class="pen-hero-eyebrow mono">
+        <span>№ 003 · Pen of the Archive</span>
+        <span>Tier III</span>
+        <span>$ 360</span>
+      </div>
+      <div class="mono" style="color: var(--oxblood); margin-bottom: 16px;">● In the Editor's Drawer</div>
+      <h1>Custom 823<br><em>Amber</em><br>Demonstrator</h1>
+      <div class="mono" style="margin-top: 28px;">Pilot · Hiratsuka, Japan · est. 1992</div>
+      <p class="deck">A workhorse dressed as an heirloom — vacuum-filled, generously inked, and quietly engineered for the page.</p>
+
+      <div class="keyspecs">
+        <div class="keyspec"><div class="k">Nib</div><div class="v">14k · Medium</div></div>
+        <div class="keyspec"><div class="k">Filler</div><div class="v">Vacuum</div></div>
+        <div class="keyspec"><div class="k">Flow</div><div class="v">Wet</div></div>
+        <div class="keyspec"><div class="k">Weight</div><div class="v">29 g</div></div>
+        <div class="keyspec"><div class="k">Material</div><div class="v">Amber resin</div></div>
+        <div class="keyspec"><div class="k">Length</div><div class="v">149.5 mm</div></div>
+      </div>
+
+      <div class="acts">
+        <a href="#pairings-here" class="primary">See its pairings →</a>
+        <a href="index.html#compare">Add to compare</a>
+        <a href="#">Save to archive</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- attribute groups -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · ATTRIBUTES SECTION
+  Six grouped cards, one per schema sub-object on `Pen` (CLAUDE.md §3):
+      i.   Identity & Provenance → top-level pen fields
+      ii.  The Nib               → pen.nib.*
+      iii. Ink Delivery          → pen.inkDelivery.*
+      iv.  Body & Trim           → pen.body.*
+      v.   Dimensions & Weight   → pen.dimensions.*
+      vi.  Ergonomics & Character→ pen.ergonomics.* + pen.performance.*
+
+  Spectrum-bar dot positions (`<i style="left:NN%">`) are normalized values
+  from the matching scoring field (e.g. flow=82 → left:82%). When wiring,
+  set `left: ${score}%` directly.
+
+  Each <span class="tag primary"> in the Ergonomics group represents a value
+  from pen.performance.bestUses[] or .mood[]; render as a loop.
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="attributes">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 01 · Attributes</span>
+      <h2 class="section-title">Every <em>dimension</em>, measured.</h2>
+      <span class="section-kicker">The full reading of the specimen, grouped by concern. Spectrum dots place the specimen on the catalogue's scale.</span>
+    </div>
+
+    <div class="attr-groups">
+
+      <!-- Identity & Provenance -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Identity <em>&amp;</em> Provenance</span>
+          <span class="num">i.</span>
+        </div>
+        <p class="attr-group-lede">Where the specimen was made, by whom, and which generation it belongs to.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">Maker</span><span class="value">Pilot Corporation</span></div>
+          <div class="attr-line"><span class="label">Model</span><span class="value">Custom 823</span></div>
+          <div class="attr-line"><span class="label">Variant</span><span class="value">Amber Demonstrator</span></div>
+          <div class="attr-line"><span class="label">Year introduced</span><span class="value">1992</span></div>
+          <div class="attr-line"><span class="label">Generation</span><span class="value">Current — 2017 revision</span></div>
+          <div class="attr-line"><span class="label">Edition</span><span class="value">Regular production</span></div>
+          <div class="attr-line"><span class="label">Country</span><span class="value">Japan</span></div>
+          <div class="attr-line"><span class="label">City</span><span class="value">Hiratsuka, Kanagawa</span></div>
+          <div class="attr-line"><span class="label">Archive number</span><span class="value">№ 003 / 172</span></div>
+          <div class="attr-line"><span class="label">Status</span><span class="value">In production · <em>readily available</em></span></div>
+        </div>
+      </div>
+
+      <!-- The Nib -->
+      <div class="attr-group tall">
+        <div class="attr-group-head">
+          <span class="ttl">The <em>Nib</em></span>
+          <span class="num">ii.</span>
+        </div>
+        <p class="attr-group-lede">The metal between the writer and the page — its size, shape, material, and how willingly it bends.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">Material</span><span class="value">14k yellow gold</span></div>
+          <div class="attr-line"><span class="label">Gold purity</span><span class="value">58.5 % (585 fineness)</span></div>
+          <div class="attr-line"><span class="label">Plating</span><span class="value">Rhodium-masked face</span></div>
+          <div class="attr-line"><span class="label">Tipping alloy</span><span class="value">Osmiridium · IPG grade 3</span></div>
+          <div class="attr-line"><span class="label">Tipping shape</span><span class="value">Spherical · hand-polished</span></div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Size (designation)</span><span class="value">Medium <span class="tag">M</span></span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:50%"></i></div>
+              <div class="ends"><span>UEF</span><span>EF</span><span>F</span><span>M</span><span>B</span><span>BB</span><span>BBB</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Tip width, measured</span><span class="value">0.55 mm</span></div>
+          <div class="attr-line"><span class="label">Tip shape</span><span class="value">Round</span></div>
+          <div class="attr-line"><span class="label">Custom grind</span><span class="value">None — stock</span></div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Flex</span><span class="value">Soft</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:32%"></i></div>
+              <div class="ends"><span>Rigid</span><span>Semi-flex</span><span>Flex</span><span>Wet noodle</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Line variation</span><span class="value">Moderate</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:54%"></i></div>
+              <div class="ends"><span>None</span><span>Slight</span><span>Moderate</span><span>Marked</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Designation №</span><span class="value">#5 (manufacturer)</span></div>
+          <div class="attr-line"><span class="label">Total nib length</span><span class="value">24.0 mm</span></div>
+          <div class="attr-line"><span class="label">Tine length (exposed)</span><span class="value">9.5 mm</span></div>
+          <div class="attr-line"><span class="label">Slit length</span><span class="value">6.8 mm</span></div>
+          <div class="attr-line"><span class="label">Breather hole</span><span class="value">Yes — round, 0.8 mm</span></div>
+          <div class="attr-line"><span class="label">Two-tone</span><span class="value">No</span></div>
+          <div class="attr-line"><span class="label">Imprint side</span><span class="value">Obverse — face-up</span></div>
+          <div class="attr-line"><span class="label">Decoration</span><span class="value">Scroll engraving · shoulders</span></div>
+          <div class="attr-line"><span class="label">Engraving</span><span class="value">"Pilot · 14k · 585"</span></div>
+        </div>
+      </div>
+
+      <!-- Ink Delivery -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Ink <em>Delivery</em></span>
+          <span class="num">iii.</span>
+        </div>
+        <p class="attr-group-lede">How the pen takes ink, holds it, and releases it under the nib.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">Filling system</span><span class="value">Vacuum (vac-fill)</span></div>
+          <div class="attr-line"><span class="label">Cartridge standard</span><span class="value">Proprietary <em>·</em> Pilot CON-70 only</span></div>
+          <div class="attr-line"><span class="label">Capacity</span><span class="value">2.0 ml</span></div>
+          <div class="attr-line"><span class="label">Capacity, in pages</span><span class="value">~ 32 A5 pages (M nib)</span></div>
+          <div class="attr-line"><span class="label">Fill stroke</span><span class="value">Single plunger · 90 % primed</span></div>
+          <div class="attr-line"><span class="label">Prime time</span><span class="value">~ 6 seconds</span></div>
+          <div class="attr-line"><span class="label">Shut-off valve</span><span class="value">Yes — close to fly</span></div>
+          <div class="attr-line"><span class="label">Feed material</span><span class="value">Plastic, finned</span></div>
+          <div class="attr-line"><span class="label">Feed visibility</span><span class="value">Visible through demonstrator</span></div>
+          <div class="attr-line"><span class="label">Ink window</span><span class="value">Whole barrel — ink level read at a glance</span></div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Flow</span><span class="value">Wet · generous</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:82%"></i></div>
+              <div class="ends"><span>Dry</span><span>Medium</span><span>Wet</span><span>Sopping</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Hard starts</span><span class="value">Rare</span></div>
+          <div class="attr-line"><span class="label">Skipping</span><span class="value">None observed</span></div>
+          <div class="attr-line"><span class="label">Dry-out uncapped</span><span class="value">5–7 days</span></div>
+        </div>
+      </div>
+
+      <!-- Body & Trim -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Body <em>&amp;</em> Trim</span>
+          <span class="num">iv.</span>
+        </div>
+        <p class="attr-group-lede">What the pen is made of, how it closes, and how light passes through it.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">Material</span><span class="value">Acrylic resin</span></div>
+          <div class="attr-line"><span class="label">Density</span><span class="value">1.18 g / cm³</span></div>
+          <div class="attr-line"><span class="label">Finish</span><span class="value">Polished</span></div>
+          <div class="attr-line"><span class="label">Colour</span><span class="value">Translucent amber</span></div>
+          <div class="attr-line"><span class="label">Translucency</span><span class="value">Demonstrator — full</span></div>
+          <div class="attr-line"><span class="label">Trim</span><span class="value">Gold-plated brass</span></div>
+          <div class="attr-line"><span class="label">Finial</span><span class="value">Resin dome · gold accent ring</span></div>
+          <div class="attr-line"><span class="label">Clip</span><span class="value">Sprung · arrow-form</span></div>
+          <div class="attr-line"><span class="label">Cap</span><span class="value">Screw · 1.75 turns</span></div>
+          <div class="attr-line"><span class="label">Cap threads</span><span class="value">Triple-start · 28 TPI</span></div>
+          <div class="attr-line"><span class="label">Section</span><span class="value">Black resin · tapered</span></div>
+          <div class="attr-line"><span class="label">Section threads</span><span class="value">Smooth · negligible</span></div>
+          <div class="attr-line"><span class="label">Cap interior</span><span class="value">Inner cap · silicone seal</span></div>
+        </div>
+      </div>
+
+      <!-- Dimensions & Weight -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Dimensions <em>&amp;</em> Weight</span>
+          <span class="num">v.</span>
+        </div>
+        <p class="attr-group-lede">Every measurement in millimetres and grams, against the archive's range.</p>
+        <div class="attr-list">
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Length, capped</span><span class="value">149.5 mm</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:58%"></i></div>
+              <div class="ends"><span>120</span><span>140</span><span>160</span><span>180</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Length, uncapped</span><span class="value">131.0 mm</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:52%"></i></div>
+              <div class="ends"><span>105</span><span>125</span><span>145</span><span>165</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Length, posted</span><span class="value">156.0 mm</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:60%"></i></div>
+              <div class="ends"><span>130</span><span>150</span><span>170</span><span>190</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Grip diameter</span><span class="value">10.7 mm</span></div>
+          <div class="attr-line"><span class="label">Max diameter</span><span class="value">14.5 mm</span></div>
+          <div class="attr-line"><span class="label">Cap length</span><span class="value">62.5 mm</span></div>
+          <div class="attr-line"><span class="label">Barrel length</span><span class="value">112.0 mm</span></div>
+          <div class="attr-line"><span class="label">Balance point</span><span class="value">52 % from nib · unposted</span></div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Weight, capped</span><span class="value">29 g</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:60%"></i></div>
+              <div class="ends"><span>15</span><span>25</span><span>35</span><span>45</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Weight, uncapped</span><span class="value">19 g</span></div>
+          <div class="attr-line"><span class="label">Cap only</span><span class="value">10 g</span></div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Weight, posted</span><span class="value">31 g</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:64%"></i></div>
+              <div class="ends"><span>15</span><span>25</span><span>35</span><span>45</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Heritage & Lineage -->
+      <!--
+        ════════════════════════════════════════════════════════════════════════════
+        CLAUDE CODE · attr-group `Heritage & Lineage` → pen.heritage (new sub-object)
+        ════════════════════════════════════════════════════════════════════════════
+      -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Heritage <em>&amp;</em> Lineage</span>
+          <span class="num">vi.</span>
+        </div>
+        <p class="attr-group-lede">Designer, year released, the family the pen belongs to, and what came before it.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">Designer</span><span class="value">Anonymous · Pilot R&amp;D</span></div>
+          <div class="attr-line"><span class="label">Year designed</span><span class="value">1992</span></div>
+          <div class="attr-line"><span class="label">Year released</span><span class="value">1992 · current generation 2017</span></div>
+          <div class="attr-line"><span class="label">Predecessor</span><span class="value">Custom 743 vacuum-filler</span></div>
+          <div class="attr-line"><span class="label">Family</span><span class="value">Pilot Custom series</span></div>
+          <div class="attr-line"><span class="label">Sister models</span><span class="value">Custom 845 · Custom 743 · Custom Heritage 92</span></div>
+          <div class="attr-line"><span class="label">Limited editions</span><span class="value">None of this barrel — model has had four</span></div>
+          <div class="attr-line"><span class="label">Original MSRP</span><span class="value">¥ 30 000 (1992)</span></div>
+          <div class="attr-line"><span class="label">Notable owners</span><span class="value">Reported among <em>Akutagawa</em>-shortlisted novelists</span></div>
+        </div>
+      </div>
+
+      <!-- Service & Provenance -->
+      <!--
+        ════════════════════════════════════════════════════════════════════════════
+        CLAUDE CODE · attr-group `Service & Provenance` → pen.service (new sub-object)
+        ════════════════════════════════════════════════════════════════════════════
+      -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Service <em>&amp;</em> Provenance</span>
+          <span class="num">vii.</span>
+        </div>
+        <p class="attr-group-lede">Warranty, repair channels, the boxed contents, and where the world stocks it.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">Warranty</span><span class="value">1 year · international</span></div>
+          <div class="attr-line"><span class="label">Service network</span><span class="value">JP · US · DE · UK · IT (5 centres)</span></div>
+          <div class="attr-line"><span class="label">Nib exchange</span><span class="value">By return — no swap</span></div>
+          <div class="attr-line"><span class="label">Spare nib unit</span><span class="value">¥ 12 000 · 6 weeks lead time</span></div>
+          <div class="attr-line"><span class="label">Country of design</span><span class="value">Japan</span></div>
+          <div class="attr-line"><span class="label">Country of assembly</span><span class="value">Japan (Hiratsuka)</span></div>
+          <div class="attr-line"><span class="label">Boxed contents</span><span class="value">Pen · silicone grease · cleaning cloth · manual</span></div>
+          <div class="attr-line"><span class="label">Converter included</span><span class="value">N/A — vacuum-fill</span></div>
+          <div class="attr-line"><span class="label">Ink sample</span><span class="value">No</span></div>
+          <div class="attr-line"><span class="label">Certificate</span><span class="value">No · regular production</span></div>
+        </div>
+      </div>
+
+      <!-- Ergonomics & Character -->
+      <div class="attr-group wide">
+        <div class="attr-group-head">
+          <span class="ttl">Ergonomics <em>&amp;</em> Character</span>
+          <span class="num">viii.</span>
+        </div>
+        <p class="attr-group-lede">How it sits in the hand — and the editor's reading of its temperament after a month at the desk.</p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+          <div class="attr-list">
+            <div class="attr-line"><span class="label">Postability</span><span class="value">Good</span></div>
+            <div class="attr-line"><span class="label">Section shape</span><span class="value">Cylindrical, slight taper</span></div>
+            <div class="attr-line"><span class="label">Threads at grip</span><span class="value">Smooth, low-set</span></div>
+            <div class="attr-line"><span class="label">Balance</span><span class="value">Forward · unposted</span></div>
+            <div class="attr-line"><span class="label">Left-hand friendly</span><span class="value">Yes — dry-time permitting</span></div>
+            <div class="attr-line"><span class="label">Travel-friendly</span><span class="value">Yes — valve closes</span></div>
+          </div>
+          <div class="attr-list">
+            <div class="attr-line with-meter">
+              <div class="row"><span class="label">Smoothness</span><span class="value">9 / 10</span></div>
+              <div class="meter"><div class="scale-bar"><i style="left:90%"></i></div>
+                <div class="ends"><span>Scratchy</span><span>Glassy</span></div>
+              </div>
+            </div>
+            <div class="attr-line with-meter">
+              <div class="row"><span class="label">Wetness</span><span class="value">8 / 10</span></div>
+              <div class="meter"><div class="scale-bar"><i style="left:82%"></i></div>
+                <div class="ends"><span>Bone-dry</span><span>Sopping</span></div>
+              </div>
+            </div>
+            <div class="attr-line with-meter">
+              <div class="row"><span class="label">Feedback</span><span class="value">4 / 10</span></div>
+              <div class="meter"><div class="scale-bar"><i style="left:40%"></i></div>
+                <div class="ends"><span>Silent</span><span>Singing</span></div>
+              </div>
+            </div>
+            <div class="attr-line with-meter">
+              <div class="row"><span class="label">Hand-friendliness</span><span class="value">9 / 10</span></div>
+              <div class="meter"><div class="scale-bar"><i style="left:88%"></i></div>
+                <div class="ends"><span>Hot-spot</span><span>All-day</span></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="attr-line" style="border-bottom:0; padding-top:0;"><span class="label">Best uses</span></div>
+            <div class="attr-tag-row">
+              <span class="tag primary">Correspondence</span>
+              <span class="tag primary">Journaling</span>
+              <span class="tag">Long-form</span>
+              <span class="tag">Margin notes</span>
+            </div>
+            <div class="attr-line" style="border-bottom:0; padding-top:18px;"><span class="label">Mood</span></div>
+            <div class="attr-tag-row">
+              <span class="tag primary">Contemplative</span>
+              <span class="tag">Workmanlike</span>
+            </div>
+            <div class="attr-line" style="border-bottom:0; padding-top:18px;"><span class="label">Avoid for</span></div>
+            <div class="attr-tag-row">
+              <span class="tag">Quick notes</span>
+              <span class="tag">Glossy paper</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Editor's strip -->
+    <div class="editor-strip">
+      <div>
+        <h4>Editor's note · M. Hoshino</h4>
+        <p class="quote">A pen that hides its engineering inside a barrel that looks, at first, like a curio. The vacuum's shut-off valve is the reason it survives travel; the soft 14k medium is the reason it survives a long letter.</p>
+      </div>
+      <div>
+        <h4>Recommended inks</h4>
+        <ul>
+          <li><span>Iroshizuku Tsuki-yo</span><span class="lk">№ 014</span></li>
+          <li><span>Sailor Yama-dori</span><span class="lk">№ 028</span></li>
+          <li><span>Diamine Oxblood</span><span class="lk">№ 041</span></li>
+          <li><span>Pilot Iro-utsushi Take-sumi</span><span class="lk">№ 022</span></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Notable owners</h4>
+        <p style="font-family: var(--font-display); font-size: 18px; line-height: 1.4; color: var(--ink-2);">A long-standing favourite of Japanese novelists and English translators — present, by report, at the writing of more than one Akutagawa-shortlisted manuscript.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- on three papers (writing samples) -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · WRITING-SAMPLE GRID
+  Three cards demonstrating the same pen on different papers.
+  Source: pen.affinityScores (top 3 paperIds desc), then join to paper records.
+  Each card field map:
+     .nm "Tomoe River S"   → paper.brand + " " + paper.model
+     .gsm "52 GSM · CREAM" → paper.substance.gsm + " GSM · " + paper.appearance.tone.toUpperCase()
+     .sample-body class    → paper.appearance.swatchClass + paper.appearance.overlayPattern
+     handwritten text      → editorial sample, or generated phrase
+     foot Affinity         → pen.affinityScores[paper.id]
+     foot Dry time         → paper.performance.dryTimeSecByNib[pen.nib.sizeNormalized]
+     foot Sheen            → measurements.sheenObserved (from related Pairing if present)
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="on-papers">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 02 · On the Page</span>
+      <h2 class="section-title">The same <em>pen</em>, on three different papers.</h2>
+      <span class="section-kicker">All samples in Iroshizuku Tsuki-yo, posted grip, indoor 2700K.</span>
+    </div>
+
+    <div class="samples-grid">
+      <article class="sample-card">
+        <div class="sample-card-head"><span class="nm">Tomoe River <em>S</em></span><span class="gsm">52 GSM · CREAM</span></div>
+        <div class="sample-body tomoe">
+          <div class="handwrit">
+            <span class="l">— A letter, weighed in light;</span>
+            <span class="l">the cobalt sits upon the cream,</span>
+            <span class="l">flashing copper at the edges.</span>
+          </div>
+        </div>
+        <div class="sample-card-foot">
+          <div class="mm"><span class="k">Affinity</span><span class="v"><em>94</em></span></div>
+          <div class="mm"><span class="k">Dry time</span><span class="v">38 s</span></div>
+          <div class="mm"><span class="k">Sheen</span><span class="v">Marked</span></div>
+        </div>
+      </article>
+
+      <article class="sample-card">
+        <div class="sample-card-head"><span class="nm">Rhodia <em>№ 16</em></span><span class="gsm">80 GSM · BRIGHT</span></div>
+        <div class="sample-body rhodia">
+          <div class="handwrit">
+            <span class="l">Tuesday — meeting at three;</span>
+            <span class="l">a brisk, glassy obedience,</span>
+            <span class="l">no sheen, no surprises.</span>
+          </div>
+        </div>
+        <div class="sample-card-foot">
+          <div class="mm"><span class="k">Affinity</span><span class="v"><em>78</em></span></div>
+          <div class="mm"><span class="k">Dry time</span><span class="v">22 s</span></div>
+          <div class="mm"><span class="k">Sheen</span><span class="v">Modest</span></div>
+        </div>
+      </article>
+
+      <article class="sample-card">
+        <div class="sample-card-head"><span class="nm">Crown Mill <em>Cotton</em></span><span class="gsm">100 GSM · CREAM LAID</span></div>
+        <div class="sample-body crown">
+          <div class="handwrit">
+            <span class="l">My dear —</span>
+            <span class="l">the laid lines guide the hand,</span>
+            <span class="l">the cotton drinks half a stroke.</span>
+          </div>
+        </div>
+        <div class="sample-card-foot">
+          <div class="mm"><span class="k">Affinity</span><span class="v"><em>72</em></span></div>
+          <div class="mm"><span class="k">Dry time</span><span class="v">24 s</span></div>
+          <div class="mm"><span class="k">Sheen</span><span class="v">Quiet</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- best paired -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · RECOMMENDED PAIRINGS
+  Lists pairings featuring this pen. Source:
+      GET /api/pairings?penId=:id&sort=affinityScore&limit=3
+  Each .picker-result card:
+     .pr-rank          → i. ii. iii. (lowercase roman, 1-indexed)
+     .pr-title         → pairing.pen.model + " × " + pairing.paper.model
+     .pr-sub           → pairing.editorial.headline
+     .pr-score number  → pairing.affinityScore
+     href              → /pairings/:pairing.id
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="pairings-here">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 03 · Recommended Marriages</span>
+      <h2 class="section-title">Pairings in which the <em>823</em> appears.</h2>
+      <span class="section-kicker">From the catalog. Listed by affinity.</span>
+    </div>
+
+    <div class="picker-results" style="border-left:0; border-right:0;">
+      <a href="index.html#pairings" class="picker-result">
+        <span class="pr-rank">i.</span>
+        <div>
+          <div class="pr-title">Custom 823 <em>×</em> Tomoe River S</div>
+          <div class="pr-sub">A wet vacuum-filler finds its translucent altar. Reserve for letters.</div>
+        </div>
+        <div class="pr-score"><span class="lbl">Affinity</span>94</div>
+      </a>
+      <a href="index.html#pairings" class="picker-result">
+        <span class="pr-rank">ii.</span>
+        <div>
+          <div class="pr-title">Custom 823 <em>×</em> Midori MD</div>
+          <div class="pr-sub">A workhorse marriage — sheen quieted, shading honest.</div>
+        </div>
+        <div class="pr-score"><span class="lbl">Affinity</span>86</div>
+      </a>
+      <a href="index.html#pairings" class="picker-result">
+        <span class="pr-rank">iii.</span>
+        <div>
+          <div class="pr-title">Custom 823 <em>×</em> Apica CD Premium</div>
+          <div class="pr-sub">For the journal that gets reread, in ivory.</div>
+        </div>
+        <div class="pr-score"><span class="lbl">Affinity</span>81</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- related pens -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · RELATED PENS RAIL
+  Other pens of kindred temperament. Source:
+      GET /api/pens?related-to=:id&limit=4
+  Sort heuristic: same nib.material + similar inkDelivery.flowScore.
+  Each tile field map:
+     .r-no    → "№ " + pen.archiveNumber
+     SVG fill → pen.photos.silhouetteColor (oklch)
+     <use href> → "#" + pen.photos.silhouetteId
+     .r-brand → pen.brand + " · " + pen.countryOfOrigin
+     .r-name  → pen.model
+     href     → /pens/:pen.id
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="related">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 04 · Also in the Drawer</span>
+      <h2 class="section-title">Specimens of <em>kindred</em> temperament.</h2>
+      <span class="section-kicker">Other 14k-gold, wetter-flowing pens in the archive.</span>
+    </div>
+
+    <div class="related">
+      <a href="pen.html">
+        <span class="r-no">№ 011</span>
+        <svg viewBox="0 0 240 40" style="color: oklch(32% 0.06 30)"><use href="#pen-cigar"/></svg>
+        <span class="r-brand">Pelikan · Germany</span>
+        <span class="r-name">Souverän M800</span>
+      </a>
+      <a href="pen.html">
+        <span class="r-no">№ 038</span>
+        <svg viewBox="0 0 240 40" style="color: oklch(22% 0.06 255)"><use href="#pen-cigar"/></svg>
+        <span class="r-brand">Sailor · Japan</span>
+        <span class="r-name">Pro Gear · Naginata</span>
+      </a>
+      <a href="pen.html">
+        <span class="r-no">№ 052</span>
+        <svg viewBox="0 0 240 40" style="color: oklch(30% 0.08 25)"><use href="#pen-classic"/></svg>
+        <span class="r-brand">Aurora · Italy</span>
+        <span class="r-name">88 Anniversary</span>
+      </a>
+      <a href="pen.html">
+        <span class="r-no">№ 069</span>
+        <svg viewBox="0 0 240 40" style="color: oklch(28% 0.05 145)"><use href="#pen-vintage"/></svg>
+        <span class="r-brand">Nakaya · Japan</span>
+        <span class="r-name">Portable · Heki-Tamenuri</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- colophon -->
+<footer class="colophon">
+  <div class="wrap">
+    <div class="colophon-grid">
+      <div>
+        <div class="colophon-mark">Pen<span style="color: var(--oxblood); font-style: italic; padding: 0 .04em;">&amp;</span>Paper</div>
+        <p>A pairing almanac for the fountain pen and its proper page. Published quarterly, in Kyōto and Vienna.</p>
+      </div>
+      <div>
+        <h4>The Archive</h4>
+        <ul>
+          <li><a href="index.html#archive-pens">172 Pens</a></li>
+          <li><a href="index.html#archive-papers">140 Papers</a></li>
+          <li><a href="index.html#pairings">48 Pairings</a></li>
+          <li><a href="index.html#compare">Compare Specimens</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>This Specimen</h4>
+        <ul>
+          <li><a href="#attributes">Attributes</a></li>
+          <li><a href="#on-papers">Writing samples</a></li>
+          <li><a href="#pairings-here">Recommended marriages</a></li>
+          <li><a href="#related">Related pens</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Return</h4>
+        <p style="margin-bottom: 14px;">Back to the full Almanac, or the Pen Archive.</p>
+        <a href="index.html" style="font-family: var(--font-display); font-size: 22px; border-bottom: 1px solid var(--ink); padding-bottom: 4px; font-style: italic;">← To the Almanac</a>
+      </div>
+    </div>
+    <div class="colophon-foot">
+      <span>© MMXXVI Pen &amp; Paper</span>
+      <span>Specimen № 003 · Custom 823</span>
+      <span>Issue IV · 02 · Spring</span>
+    </div>
+  </div>
+</footer>
+
+<script src="search.js" defer></script>
+</body>
+</html>

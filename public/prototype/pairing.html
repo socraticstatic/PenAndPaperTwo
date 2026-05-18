@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pairing № 047 · Custom 823 × Tomoe River — Pen &amp; Paper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  IMAGE-SLOT NOTICE · for Claude Code
+  ════════════════════════════════════════════════════════════════════════════
+  Every <image-slot> on this page is a DESIGN-TIME placeholder backed by
+  image-slot.js (a sidecar-persistence web component for the prototype).
+  In production, replace EACH <image-slot id="…"> with a plain <img> whose
+  src points at a CDN URL — the slot id maps directly to a `photos.*` field
+  on the model. Specifically on this page:
+
+    <image-slot id="pairing-hero-pen">    → pairing.pen.photos.hero
+    <image-slot id="pairing-hero-paper">  → pairing.paper.photos.hero
+    <image-slot id="pairing-sample">      → pairing.writingSamplePhoto
+
+  Drop image-slot.js from the <script> imports once removed.
+  Photos MUST be transparent PNGs (see CLAUDE.md §2).
+-->
+<script src="image-slot.js"></script>
+<style>
+  .breadcrumb {
+    border-bottom: var(--rule);
+    padding: 18px 0;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute);
+  }
+  .breadcrumb a:hover { color: var(--ink); }
+  .breadcrumb .crumb-mid { color: var(--ink); }
+
+  /* hero */
+  .pairing-hero {
+    padding: 64px 0 72px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .pairing-hero-eyebrow {
+    display: flex; justify-content: space-between;
+    padding-bottom: 24px;
+    margin-bottom: 36px;
+    border-bottom: var(--rule);
+  }
+  .pairing-hero-eyebrow .badge {
+    color: var(--oxblood);
+  }
+  .pairing-hero-eyebrow .badge::before {
+    content: "● "; margin-right: 4px;
+  }
+  .pairing-hero h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(72px, 11vw, 180px);
+    line-height: 0.86;
+    letter-spacing: -0.025em;
+    text-align: center;
+    text-wrap: balance;
+  }
+  .pairing-hero h1 .x {
+    color: var(--oxblood); font-style: italic; font-weight: 300;
+    padding: 0 0.1em;
+    display: inline-block;
+  }
+  .pairing-hero .pp-deck {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-align: center;
+    max-width: 42ch;
+    margin: 36px auto 0;
+    text-wrap: balance;
+  }
+
+  /* Pen + Paper preview cards */
+  .pp-preview {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .pp-card {
+    border: var(--rule);
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .pp-card-visual {
+    aspect-ratio: 4/3;
+    position: relative;
+    background: var(--paper-2);
+  }
+  .pp-card-visual.paper-bg { background: oklch(94% 0.022 90); }
+  .pp-card-visual .pp-label {
+    position: absolute; top: 14px; left: 14px;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute);
+  }
+  .pp-card-body { padding: 22px 24px; }
+  .pp-card-body .nm { font-family: var(--font-mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-mute); }
+  .pp-card-body .title { font-family: var(--font-display); font-size: 32px; line-height: 1.0; margin-top: 6px; }
+  .pp-card-body .title em { color: var(--oxblood); font-style: italic; }
+  .pp-card-body .sub { font-family: var(--font-display); font-style: italic; font-size: 17px; color: var(--ink-2); margin-top: 8px; }
+  .pp-card-body .row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-top: 18px; padding-top: 18px; border-top: var(--rule);
+  }
+  .pp-card-body .row > div { display: flex; flex-direction: column; gap: 2px; }
+  .pp-card-body .row .k { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute); }
+  .pp-card-body .row .v { font-family: var(--font-display); font-size: 18px; }
+  .pp-card .more {
+    margin-top: auto; padding: 12px 24px;
+    border-top: var(--rule);
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-mute);
+  }
+  .pp-card .more a { border-bottom: 1px solid var(--ink); color: var(--ink); padding-bottom: 2px; }
+
+  /* central affinity dial */
+  .affinity-dial {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px;
+    min-width: 180px;
+    padding: 24px 12px;
+  }
+  .affinity-dial .lbl {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--ink-mute);
+  }
+  .affinity-dial .number {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: 120px; line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--oxblood);
+    font-variant-numeric: tabular-nums;
+  }
+  .affinity-dial .out-of {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: .14em; color: var(--ink-mute);
+  }
+  .affinity-dial .x-glyph {
+    font-family: var(--font-display); font-style: italic;
+    font-size: 48px; color: var(--ink-2);
+    margin: 8px 0;
+  }
+
+  /* writing sample */
+  .pairing-sample {
+    border: var(--rule);
+    background: oklch(95.5% 0.018 85);
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    aspect-ratio: 5/2;
+    display: flex; flex-direction: column;
+  }
+  .pairing-sample::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(to bottom, transparent 0 38px, color-mix(in oklch, var(--sapphire) 22%, transparent) 38px 39px);
+    pointer-events: none;
+  }
+  .pairing-sample .ps-text {
+    position: relative;
+    padding: 60px 80px 40px;
+    font-family: var(--font-display); font-style: italic;
+    font-size: 44px; line-height: 39px;
+    color: oklch(28% 0.07 255);
+    letter-spacing: 0.005em;
+    flex: 1;
+  }
+  .pairing-sample .ps-text .l { display: block; }
+  .pairing-sample .ps-foot {
+    position: relative;
+    padding: 18px 32px;
+    border-top: 1px dashed var(--hairline-strong);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute);
+    background: color-mix(in oklch, oklch(95.5% 0.018 85) 80%, transparent);
+  }
+  .sample-slot-frame {
+    position: relative;
+    border: var(--rule);
+    aspect-ratio: 5/2;
+    background: var(--paper-2);
+  }
+  .sample-slot-frame image-slot {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+  }
+  .sample-slot-frame .pp-label {
+    position: absolute; top: 14px; right: 14px;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute);
+    background: var(--paper); padding: 4px 8px; border: var(--rule);
+  }
+
+  /* the 5 axes */
+  .axes-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border-top: 1px solid var(--ink);
+    border-left: var(--rule);
+  }
+  .axis-cell {
+    border-right: var(--rule); border-bottom: var(--rule);
+    padding: 28px 22px;
+    background: var(--paper);
+    min-height: 240px;
+    display: flex; flex-direction: column;
+  }
+  .axis-cell .ax-no { font-family: var(--font-mono); font-size: 10px; letter-spacing: .16em; color: var(--ink-mute); text-transform: uppercase; }
+  .axis-cell .ax-name {
+    font-family: var(--font-display); font-size: 24px;
+    line-height: 1.1; letter-spacing: -0.01em;
+    margin: 16px 0 14px;
+  }
+  .axis-cell .ax-name em { color: var(--oxblood); font-style: italic; }
+  .axis-cell .ax-body {
+    font-size: 13px; line-height: 1.55; color: var(--ink-2);
+    flex: 1;
+  }
+  .axis-cell .ax-score {
+    font-family: var(--font-display); font-size: 56px; line-height: 1.0;
+    letter-spacing: -0.02em;
+    margin-top: 14px;
+    color: var(--oxblood);
+    font-variant-numeric: tabular-nums;
+  }
+  .axis-cell .ax-score .denom {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: .14em; color: var(--ink-mute);
+    margin-left: 4px;
+    vertical-align: 28px;
+  }
+  .axis-cell .ax-bar {
+    margin-top: 12px;
+    height: 1px; background: var(--ink); position: relative;
+  }
+  .axis-cell .ax-bar i {
+    position: absolute; top: -4px; width: 9px; height: 9px;
+    background: var(--oxblood); border-radius: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* measurements + conditions */
+  .meas-cond {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 0;
+    border: var(--rule);
+    border-top: 0;
+  }
+  .meas-cond > div { padding: 32px 36px 28px; }
+  .meas-cond > div:first-child { border-right: var(--rule); }
+  .meas-cond h4 {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--ink-mute);
+    margin-bottom: 22px; font-weight: 500;
+    display: flex; justify-content: space-between;
+  }
+  .meas-cond h4 .num { color: var(--ink-mute); }
+  .meas-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .meas-table td {
+    padding: 12px 0;
+    border-bottom: var(--rule);
+    vertical-align: baseline;
+  }
+  .meas-table td:first-child {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute);
+    width: 38%;
+  }
+  .meas-table td:nth-child(2) {
+    font-family: var(--font-display); font-size: 21px;
+  }
+  .meas-table td:nth-child(2) em { color: var(--oxblood); font-style: italic; }
+  .meas-table td:nth-child(3) {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: .14em; color: var(--ink-mute);
+    text-align: right;
+  }
+  .meas-table tr:last-child td { border-bottom: 0; }
+
+  /* editor's long note */
+  .long-note {
+    border: var(--rule);
+    border-top: 0;
+    padding: 56px 64px;
+    background: var(--paper-2);
+    display: grid;
+    grid-template-columns: 200px 1fr 200px;
+    gap: 48px;
+  }
+  .long-note h4 {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--ink-mute);
+    font-weight: 500;
+  }
+  .long-note .quote {
+    font-family: var(--font-display); font-style: italic;
+    font-size: 30px; line-height: 1.35;
+    color: var(--ink); text-wrap: pretty;
+  }
+  .long-note .quote p + p { margin-top: 18px; }
+  .long-note .author {
+    margin-top: 24px;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--ink-mute);
+  }
+  .long-note .tags-stack {
+    display: flex; flex-direction: column; gap: 8px;
+    align-items: flex-end;
+  }
+  .long-note .tags-stack .t {
+    font-family: var(--font-mono); font-size: 9.5px;
+    letter-spacing: .14em; text-transform: uppercase;
+    border: 1px solid var(--ink); padding: 4px 10px;
+    background: var(--paper);
+  }
+
+  /* related */
+  .related-pairings {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-left: var(--rule);
+    border-top: 1px solid var(--ink);
+  }
+  .related-pairings a {
+    border-right: var(--rule); border-bottom: var(--rule);
+    padding: 28px;
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    min-height: 220px;
+  }
+  .related-pairings a:hover { background: var(--paper-2); }
+  .related-pairings .r-no { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; color: var(--ink-mute); }
+  .related-pairings .r-title { font-family: var(--font-display); font-size: 24px; line-height: 1.1; margin-top: 14px; }
+  .related-pairings .r-title em { color: var(--oxblood); font-style: italic; }
+  .related-pairings .r-sub { font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+  .related-pairings .r-foot {
+    margin-top: auto; padding-top: 16px;
+    border-top: var(--rule);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .related-pairings .r-foot .aff { font-family: var(--font-display); font-size: 24px; }
+  .related-pairings .r-foot .aff-l { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; color: var(--ink-mute); }
+
+  @media (max-width: 1100px) {
+    .pp-preview { grid-template-columns: 1fr; }
+    .axes-grid { grid-template-columns: 1fr 1fr; }
+    .meas-cond { grid-template-columns: 1fr; }
+    .meas-cond > div:first-child { border-right: 0; border-bottom: var(--rule); }
+    .long-note { grid-template-columns: 1fr; padding: 32px; }
+    .long-note .tags-stack { align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
+    .related-pairings { grid-template-columns: 1fr; }
+    .pairing-sample .ps-text { padding: 32px; font-size: 28px; line-height: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- pen silhouettes (shared from index.html) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="pen-classic" viewBox="0 0 240 40">
+      <path d="M2 20 Q2 14 8 14 L94 14 L96 12 L96 28 L94 26 L8 26 Q2 26 2 20Z" fill="currentColor"/>
+      <rect x="20" y="6" width="2" height="14" fill="currentColor"/>
+      <circle cx="21" cy="5" r="2" fill="currentColor"/>
+      <rect x="88" y="14" width="3" height="12" fill="var(--paper)"/>
+      <rect x="84" y="14" width="2" height="12" fill="var(--paper)"/>
+      <path d="M96 12 L196 12 Q204 12 208 16 L222 20 L208 24 Q204 28 196 28 L96 28 Z" fill="currentColor"/>
+      <path d="M222 20 L236 19.5 L238 20 L236 20.5 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="pen-flat" viewBox="0 0 240 40">
+      <rect x="2" y="14" width="92" height="12" fill="currentColor"/>
+      <rect x="18" y="8" width="2" height="12" fill="currentColor"/>
+      <circle cx="19" cy="6.5" r="1.8" fill="currentColor"/>
+      <rect x="86" y="14" width="2" height="12" fill="var(--paper)"/>
+      <rect x="94" y="14" width="110" height="12" fill="currentColor"/>
+      <path d="M204 14 L220 18 L222 20 L220 22 L204 26 Z" fill="currentColor"/>
+      <path d="M222 20 L236 19.5 L238 20 L236 20.5 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="pen-cigar" viewBox="0 0 240 40">
+      <path d="M6 20 Q6 14 14 14 L92 14 L96 12 L96 28 L92 26 L14 26 Q6 26 6 20Z" fill="currentColor"/>
+      <rect x="22" y="7" width="2" height="13" fill="currentColor"/>
+      <circle cx="23" cy="6" r="1.8" fill="currentColor"/>
+      <rect x="86" y="14" width="3" height="12" fill="var(--paper)"/>
+      <path d="M96 12 Q96 12 100 12 L200 12 Q212 12 218 18 L228 20 L218 22 Q212 28 200 28 L100 28 Q96 28 96 28 Z" fill="currentColor"/>
+      <path d="M228 20 L237 19.5 L239 20 L237 20.5 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="pen-vintage" viewBox="0 0 240 40">
+      <path d="M0 20 L4 16 Q6 14 12 14 L92 14 L94 12 L94 28 L92 26 L12 26 Q6 26 4 24 Z" fill="currentColor"/>
+      <rect x="22" y="6" width="2" height="14" fill="currentColor"/>
+      <rect x="84" y="14" width="2" height="12" fill="var(--paper)"/>
+      <path d="M94 12 L196 12 Q208 14 218 18 L230 20 L218 22 Q208 26 196 28 L94 28 Z" fill="currentColor"/>
+      <path d="M230 20 L240 20 L238 21 L236 20.4 Z" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- top bar -->
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <nav class="topbar-nav">
+      <a href="index.html#archive-pens">Pens</a>
+      <a href="index.html#archive-papers">Papers</a>
+      <a href="index.html#pairings">Pairings</a>
+      <a href="index.html#picker">Find a pairing</a>
+      <a href="index.html#compare">Compare</a>
+    </nav>
+    <a href="index.html" class="topbar-mark">Pen &amp; Paper</a>
+    <div class="topbar-meta">
+      <span><span class="dot"></span>Specimen</span>
+      <span>The Pairing Archive</span>
+      <span>Search ⌘K</span>
+    </div>
+  </div>
+</header>
+
+<!--
+  ═══════════════════════════════════════════════════════════════════════════
+  SAMPLE DATA · entire page is hard-coded for Pairing № 047
+                (Pilot Custom 823 × Tomoe River S)
+
+  Replace by Claude Code with payload from:
+    GET /api/pairings/:id   →   Pairing  (CLAUDE.md §5)
+  The endpoint should embed `pen` and `paper` objects on the response so
+  this page can render without a second round-trip.
+
+  Field map for the breadcrumb + hero below:
+    "№ 047"                        → pairing.archiveNumber  (formatted "№ NNN")
+    "Pilot Custom 823 …"           → pairing.pen.brand + pen.model
+    "Tomoe River S"                → pairing.paper.brand + paper.model
+    "Editor's Choice"              → pairing.isEditorsChoice ? "Editor's Choice" : null
+    "Pairing of the Week"          → pairing.isPairingOfTheWeek ? "Pairing of the Week" : null
+    Hero deck (italic line)        → pairing.editorial.headline
+  ═══════════════════════════════════════════════════════════════════════════
+-->
+
+<div class="wrap">
+  <nav class="breadcrumb">
+    <span><a href="index.html">Almanac</a> &nbsp;·&nbsp; <a href="index.html#pairings">Pairing Archive</a> &nbsp;·&nbsp; <span class="crumb-mid">№ 047 — Custom 823 × Tomoe River</span></span>
+    <span>47 / 48 &nbsp;·&nbsp; <a href="#" style="text-decoration: underline;">← Prev</a> &nbsp;&nbsp; <a href="#" style="text-decoration: underline;">Next →</a></span>
+  </nav>
+</div>
+
+<!-- ─────────────────────────────── HERO ─────────────────────────────── -->
+<section class="pairing-hero">
+  <div class="wrap">
+    <div class="pairing-hero-eyebrow mono">
+      <!-- pairing.archiveNumber → "PAIRING № 047" -->
+      <span>Pairing № 047</span>
+      <!-- pairing.isEditorsChoice → toggles this label -->
+      <span class="badge">Editor's Choice</span>
+      <!-- pairing.useCase + pairing.mood[0] (joined by ·) -->
+      <span>Correspondence · Contemplative</span>
+      <!-- pairing.affinityScore → "Affinity NN/100" -->
+      <span>Affinity 94 / 100</span>
+    </div>
+
+    <!--
+      Hero headline composes pairing.pen.model + " × " + pairing.paper.model.
+      The <span class="x"> wraps the multiplication glyph for the oxblood accent.
+    -->
+    <h1>Custom 823<span class="x">×</span>Tomoe River</h1>
+
+    <!-- pairing.editorial.headline -->
+    <p class="pp-deck">A wet Japanese vacuum-filler meets the thinnest paper that still holds its line — reserved for letters intended to be kept.</p>
+
+    <!--
+      Specimen preview cards.
+      Left card  → pairing.pen   (links to /pens/:pen.id)
+      Right card → pairing.paper (links to /papers/:paper.id)
+      Center cell shows pairing.affinityScore as a big numeral.
+    -->
+    <div class="pp-preview">
+      <a class="pp-card" href="pen.html">
+        <div class="pp-card-visual">
+          <span class="pp-label">Pen specimen</span>
+          <!--
+            IMAGE-SLOT · design-time only
+            id="pairing-hero-pen" → pairing.pen.photos.hero
+            Replace with <img src="…" alt="…" loading="lazy"> in production.
+          -->
+          <image-slot id="pairing-hero-pen" shape="rect" style="position:absolute; inset:0; width:100%; height:100%;" placeholder="Pen photograph · transparent PNG"></image-slot>
+        </div>
+        <div class="pp-card-body">
+          <div class="nm">№ 003 · Pilot · Japan</div>
+          <div class="title">Custom 823 <em>·</em> Amber</div>
+          <div class="sub">14k medium, vacuum-filled — generous and gentle.</div>
+          <div class="row">
+            <div><span class="k">Nib</span><span class="v">14k · M</span></div>
+            <div><span class="k">Flow</span><span class="v">Wet</span></div>
+            <div><span class="k">Filler</span><span class="v">Vacuum · 2.0 ml</span></div>
+            <div><span class="k">Weight</span><span class="v">29 g · posted</span></div>
+          </div>
+        </div>
+        <div class="more">
+          <span>Read the pen in full</span><a href="pen.html">→</a>
+        </div>
+      </a>
+
+      <div class="affinity-dial">
+        <span class="lbl">Marriage of</span>
+        <span class="number">94</span>
+        <span class="out-of">out of 100</span>
+        <span class="x-glyph">×</span>
+        <span class="lbl">Editor's Choice</span>
+      </div>
+
+      <a class="pp-card" href="paper.html">
+        <div class="pp-card-visual paper-bg">
+          <span class="pp-label">Paper specimen</span>
+          <!--
+            IMAGE-SLOT · design-time only
+            id="pairing-hero-paper" → pairing.paper.photos.hero
+          -->
+          <image-slot id="pairing-hero-paper" shape="rect" style="position:absolute; inset:0; width:100%; height:100%;" placeholder="Paper photograph · transparent PNG"></image-slot>
+        </div>
+        <div class="pp-card-body">
+          <div class="nm">№ 001 · Tomoegawa · Japan</div>
+          <div class="title">Tomoe River <em>S</em></div>
+          <div class="sub">52 gsm cream that drinks just enough, and sheens in return.</div>
+          <div class="row">
+            <div><span class="k">Weight</span><span class="v">52 gsm</span></div>
+            <div><span class="k">Tooth</span><span class="v">Glass</span></div>
+            <div><span class="k">Sheen</span><span class="v">Pronounced</span></div>
+            <div><span class="k">Bleed</span><span class="v">Nil</span></div>
+          </div>
+        </div>
+        <div class="more">
+          <span>Read the paper in full</span><a href="paper.html">→</a>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── WRITING SAMPLE ─────────────────────────────── -->
+<section class="section" id="sample">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 01 · The Marriage · on the Page</span>
+      <h2 class="section-title">A <em>writing sample</em>, in standard ink.</h2>
+      <span class="section-kicker">Photographed at 30° under a 2700K lamp. The standardized ink is Iroshizuku Tsuki-yo.</span>
+    </div>
+
+    <!--
+      Writing sample.
+      If pairing.writingSamplePhoto exists → use the .sample-slot-frame block
+                                             with <img src> in production.
+      Otherwise → fall back to the CSS-rendered ruled-paper preview below
+                  (the .pairing-sample block) using pairing.editorial.tastingNote
+                  as the text body.
+
+      The footer strip pulls from pairing.conditions.* and pairing.measurements.*
+      Field map (footer strip, left → right):
+        "Lamp · 2700K"      → conditions.lightingK (formatted "Lamp · NNNN K")
+        "Drytime · 38 s"    → measurements.dryTimeSec
+        "Photographed · 30°"→ conditions.photographedAt
+        "Sheen · Pronounced"→ measurements.sheenObserved
+        "Hour · 21:14"      → conditions.hour
+    -->
+    <div class="pairing-sample">
+      <div class="ps-text">
+        <span class="l">In every quiet stroke a small choice —</span>
+        <span class="l">the nib accepts, the paper assents,</span>
+        <span class="l">and a sentence appears that did not exist</span>
+        <span class="l">a moment before this exact ink met</span>
+        <span class="l">this exact cream-fibred sheet, at this hour,</span>
+        <span class="l">in this light, by this hand.</span>
+      </div>
+      <div class="ps-foot">
+        <span>Lamp · 2700K · indoor</span>
+        <span>Drytime · 38 s</span>
+        <span>Photographed · 30°</span>
+        <span>Sheen · Pronounced</span>
+        <span>Hour · 21:14</span>
+        <span>Sample № 047 / 048</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── THE FIVE AXES ─────────────────────────────── -->
+<section class="section" id="scoring">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 02 · The Score</span>
+      <h2 class="section-title">Five <em>axes</em>, weighed against the catalogue.</h2>
+      <span class="section-kicker">The same axes that drive the Sommelier picker. 100 is a marriage; 0 is a divorce.</span>
+    </div>
+
+    <!--
+      pairing.scoring · 5 axes plus overall.
+      Each .ax-score reads from a different field; the .ax-bar dot's `left:NN%`
+      is the same value as the score.
+
+        Axis i.   wetnessAbsorbency
+        Axis ii.  nibSizeTooth
+        Axis iii. sheenSmoothness
+        Axis iv.  flexSizing
+        Axis v.   useMood
+      The hero `Affinity 94` reads from `pairing.scoring.overall` (or affinityScore).
+    -->
+    <div class="axes-grid">
+      <div class="axis-cell">
+        <span class="ax-no">i.</span>
+        <h3 class="ax-name">Wetness <em>×</em> Absorbency</h3>
+        <p class="ax-body">The 823's flow is famously generous; Tomoe's extreme sizing keeps the river on the surface. A near-textbook match.</p>
+        <div class="ax-score">96<span class="denom">/100</span></div>
+        <div class="ax-bar"><i style="left:96%"></i></div>
+      </div>
+      <div class="axis-cell">
+        <span class="ax-no">ii.</span>
+        <h3 class="ax-name">Nib Size <em>×</em> Tooth</h3>
+        <p class="ax-body">Medium on glass — comfortable, perhaps boring. A finer nib would have rated higher on this axis; we deduct points for fairness.</p>
+        <div class="ax-score">82<span class="denom">/100</span></div>
+        <div class="ax-bar"><i style="left:82%"></i></div>
+      </div>
+      <div class="axis-cell">
+        <span class="ax-no">iii.</span>
+        <h3 class="ax-name">Sheen <em>×</em> Smoothness</h3>
+        <p class="ax-body">The whole reason the marriage exists. Tomoe pools just enough for any sheening ink to declare its second colour.</p>
+        <div class="ax-score">98<span class="denom">/100</span></div>
+        <div class="ax-bar"><i style="left:98%"></i></div>
+      </div>
+      <div class="axis-cell">
+        <span class="ax-no">iv.</span>
+        <h3 class="ax-name">Flex <em>×</em> Sizing</h3>
+        <p class="ax-body">The 823 is soft, not flexed; sizing here is overkill for the line-variation modest it allows. Still very high.</p>
+        <div class="ax-score">88<span class="denom">/100</span></div>
+        <div class="ax-bar"><i style="left:88%"></i></div>
+      </div>
+      <div class="axis-cell">
+        <span class="ax-no">v.</span>
+        <h3 class="ax-name">Use <em>×</em> Mood</h3>
+        <p class="ax-body">Correspondence and journaling, contemplative hours — the temperament of pen and paper align without effort.</p>
+        <div class="ax-score">94<span class="denom">/100</span></div>
+        <div class="ax-bar"><i style="left:94%"></i></div>
+      </div>
+    </div>
+
+    <!-- ─────────── MEASUREMENTS + CONDITIONS ─────────── -->
+    <!--
+      Two parallel tables.
+      LEFT  → pairing.measurements.*
+      RIGHT → pairing.conditions.*
+    -->
+    <div class="meas-cond">
+      <div>
+        <h4>Measurements <span class="num">As observed</span></h4>
+        <table class="meas-table">
+          <!-- measurements.dryTimeSec -->
+          <tr><td>Dry time</td><td><em>38</em> seconds</td><td>Iroshizuku Tsuki-yo · M nib</td></tr>
+          <!-- measurements.bleed -->
+          <tr><td>Bleed-through</td><td>None</td><td>Verso · clean</td></tr>
+          <!-- measurements.ghosting -->
+          <tr><td>Ghosting</td><td>Visible</td><td>Translucent paper — accepted</td></tr>
+          <!-- measurements.feathering -->
+          <tr><td>Feathering</td><td>Nil</td><td>10× loupe · sharp</td></tr>
+          <!-- measurements.showThrough -->
+          <tr><td>Show-through</td><td>Moderate</td><td>Single-sided recommended</td></tr>
+          <!-- measurements.sheenObserved -->
+          <tr><td>Sheen observed</td><td><em>Pronounced</em></td><td>Copper · at the troughs</td></tr>
+          <!-- derived from measurements -->
+          <tr><td>Shading</td><td>Excellent</td><td>Light–to–deep cobalt</td></tr>
+          <tr><td>Line crispness</td><td>9 / 10</td><td>No spread observed</td></tr>
+        </table>
+      </div>
+      <div>
+        <h4>Conditions <span class="num">Of the test</span></h4>
+        <table class="meas-table">
+          <!-- conditions.inkUsed -->
+          <tr><td>Ink</td><td>Iroshizuku Tsuki-yo</td><td>—</td></tr>
+          <!-- conditions.hour -->
+          <tr><td>Hour</td><td>21:14</td><td>Still</td></tr>
+          <!-- conditions.lightingK -->
+          <tr><td>Lighting</td><td>2700 K</td><td>Desk lamp</td></tr>
+          <!-- conditions.tempC -->
+          <tr><td>Temperature</td><td>19 °C</td><td>Indoor</td></tr>
+          <!-- conditions.rhPct -->
+          <tr><td>Humidity</td><td>48 % RH</td><td>—</td></tr>
+          <!-- conditions.photographedAt -->
+          <tr><td>Angle</td><td>30°</td><td>Sheen-visible</td></tr>
+          <tr><td>Hand</td><td>Right · posted · 55°</td><td>—</td></tr>
+          <tr><td>Pad of</td><td>Sheets 21–24</td><td>Fresh pad</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─────────── EDITOR'S LONG NOTE ─────────── -->
+    <!--
+      LEFT cell  → static label
+      CENTER     → pairing.editorial.tastingNote   (the body)
+                   pairing.editorial.editorName    (the byline)
+      RIGHT      → pairing.editorial.tags[]        (chip stack)
+    -->
+    <div class="long-note">
+      <div>
+        <h4>Editor's note</h4>
+      </div>
+      <div>
+        <div class="quote">
+          <p>A wet vacuum-filler finds its translucent altar. The 823's medium 14k lays cobalt in helpings most papers would buckle under; Tomoe River, scarcely fifty-two grams, takes the flood without complaint and returns sheen so pronounced it reads as a different colour at the troughs.</p>
+          <p>The marriage is famous for a reason: it is, when it works, the easiest demonstration of what fountain pens can do that ballpoints cannot. Reserve for letters one means to be kept, for journals one expects to reread. Allow forty seconds before turning the page.</p>
+        </div>
+        <div class="author">— M. Hoshino, editor at large · entered 14·v·26</div>
+      </div>
+      <div class="tags-stack">
+        <span class="t">Correspondence</span>
+        <span class="t">Sheen</span>
+        <span class="t">Wet flow</span>
+        <span class="t">Evening</span>
+        <span class="t">Heritage</span>
+        <span class="t">Editor's Choice</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── RELATED PAIRINGS ─────────────────────────────── -->
+<!--
+  Related pairings rail. Three cards from the same useCase OR sharing the pen
+  OR the paper, sorted by affinityScore desc. From the same endpoint:
+    GET /api/pairings?related-to=:id&limit=3
+  Each card → Pairing summary record. Field map:
+    "№ 052"             → archiveNumber
+    "Lamy 2000 × …"     → pen.model + " × " + paper.model
+    "A modern fine …"   → editorial.headline
+    "88"                → affinityScore
+-->
+<section class="section" id="related">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 03 · In the Neighbourhood</span>
+      <h2 class="section-title">Other <em>marriages</em>, kindred to this one.</h2>
+      <span class="section-kicker">Sharing the pen, the paper, or the use case. Sorted by affinity.</span>
+    </div>
+
+    <div class="related-pairings">
+      <a href="pairing.html">
+        <span class="r-no">№ 052 · CRISP</span>
+        <h3 class="r-title">Lamy 2000 <em>×</em> Rhodia № 16</h3>
+        <p class="r-sub">A modern fine on the most modern paper.</p>
+        <div class="r-foot"><span class="aff-l">Affinity</span><span class="aff">88</span></div>
+      </a>
+      <a href="pairing.html">
+        <span class="r-no">№ 061 · ROMANTIC</span>
+        <h3 class="r-title">Nakaya Portable <em>×</em> Crown Mill</h3>
+        <p class="r-sub">Urushi on laid cotton — the room hushes.</p>
+        <div class="r-foot"><span class="aff-l">Affinity</span><span class="aff">91</span></div>
+      </a>
+      <a href="pairing.html">
+        <span class="r-no">№ 089 · CRISP</span>
+        <h3 class="r-title">Sailor Pro Gear <em>×</em> Tomoe River</h3>
+        <p class="r-sub">Feedback nib over thin paper — for the keepers among letters.</p>
+        <div class="r-foot"><span class="aff-l">Affinity</span><span class="aff">89</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── COLOPHON ─────────────────────────────── -->
+<footer class="colophon">
+  <div class="wrap">
+    <div class="colophon-grid">
+      <div>
+        <div class="colophon-mark">Pen<span style="color: var(--oxblood); font-style: italic; padding: 0 .04em;">&amp;</span>Paper</div>
+        <p>A pairing almanac for the fountain pen and its proper page. Published quarterly, in Kyōto and Vienna.</p>
+      </div>
+      <div>
+        <h4>The Archive</h4>
+        <ul>
+          <li><a href="index.html#archive-pens">172 Pens</a></li>
+          <li><a href="index.html#archive-papers">140 Papers</a></li>
+          <li><a href="index.html#pairings">48 Pairings</a></li>
+          <li><a href="index.html#compare">Compare Specimens</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>This Pairing</h4>
+        <ul>
+          <li><a href="#sample">Writing sample</a></li>
+          <li><a href="#scoring">The five axes</a></li>
+          <li><a href="#related">Related marriages</a></li>
+          <li><a href="pen.html">The pen, in full</a></li>
+          <li><a href="paper.html">The paper, in full</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Return</h4>
+        <p style="margin-bottom: 14px;">Back to the full Almanac, or the Pairing catalogue.</p>
+        <a href="index.html" style="font-family: var(--font-display); font-size: 22px; border-bottom: 1px solid var(--ink); padding-bottom: 4px; font-style: italic;">← To the Almanac</a>
+      </div>
+    </div>
+    <div class="colophon-foot">
+      <span>© MMXXVI Pen &amp; Paper</span>
+      <span>Pairing № 047 · Custom 823 × Tomoe River</span>
+      <span>Issue IV · 02 · Spring</span>
+    </div>
+  </div>
+</footer>
+
+<script src="search.js" defer></script>
+</body>
+</html>

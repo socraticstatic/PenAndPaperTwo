@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iroshizuku Tsuki-yo — Pen &amp; Paper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · ink-detail.html
+  Single-ink detail view. Route: /inks/:id
+  Every value below the topbar is HARD-CODED SAMPLE DATA for
+  Pilot Iroshizuku Tsuki-yo (No. 014). Replace with payload from:
+      const { data: ink } = await sb.from('inks')
+        .select('*').eq('id', params.id).single();
+  See CLAUDE.md §7 for the full `Ink` schema.
+
+  Page-wide field map for the hero block:
+    breadcrumb "№ 014 — Tsuki-yo"        → "№ " + ink.archive_number + " — " + ink.model
+    eyebrow "Sheening · 5/5"             → ink.family + " · " + ink.performance.sheenVisibility + "/5"
+    eyebrow "$ 28 / 50 ml"               → currency-formatted ink.pricing.msrpUsd + " / " + ink.pricing.bottleMl + " ml"
+    badge "● Editor's Choice — Sheen"    → ink.editorial.editorPick label
+    H1 "Tsuki-yo"                        → ink.model
+    h1-sub "Moonlit Night"               → ink.modelEnglish
+    sub-line "Pilot Iroshizuku · Japan"  → ink.brand + " · " + isoCountry(ink.country_of_origin)
+                                           + " · est. " + ink.year_introduced
+    deck (italic paragraph)              → ink.editorial.deck
+
+  IMAGE-SLOT NOTICE:
+  Hero swatch is a CSS-rendered colour wash driven by `--ink-color` /
+  `--ink-shade-low` / `--ink-sheen` custom properties — no <image-slot>
+  needed for the colour itself. A separate <image-slot id="ink-bottle">
+  could be added to host an optional bottle photograph; for production
+  swap to <img src> as elsewhere. See CLAUDE.md §3 for image specs.
+-->
+<style>
+  .breadcrumb {
+    border-bottom: var(--rule);
+    padding: 18px 0;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute);
+  }
+  .breadcrumb a:hover { color: var(--ink); }
+  .breadcrumb .crumb-mid { color: var(--ink); }
+
+  /* hero */
+  .ink-hero {
+    padding: 56px 0 88px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 72px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .ink-hero-visual {
+    --ink-color: oklch(24% 0.06 252);
+    --ink-shade-low: oklch(14% 0.05 252);
+    --ink-sheen: oklch(48% 0.12 50);
+    aspect-ratio: 3/4;
+    position: relative;
+    border: var(--rule);
+    overflow: hidden;
+    background: var(--ink-color);
+  }
+  .ink-hero-visual::before {
+    /* pooling gradient at the bottom — darker shade */
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40%;
+    background: linear-gradient(to top, var(--ink-shade-low) 0%, transparent 100%);
+    mix-blend-mode: multiply;
+    opacity: 0.8;
+  }
+  .ink-hero-visual::after {
+    /* a slim sheen stripe near the bottom */
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 24px;
+    background: var(--ink-sheen);
+    mix-blend-mode: screen;
+    opacity: 0.85;
+  }
+  .ink-hero-visual .placeholder-corner {
+    position: absolute; top: 14px; right: 14px;
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--paper);
+    background: rgba(0,0,0,0.25); padding: 4px 8px; backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .ink-hero-visual .hex {
+    position: absolute; top: 14px; left: 14px;
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--paper);
+    background: rgba(0,0,0,0.25); padding: 4px 8px; backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .ink-hero-visual .writing {
+    position: absolute; left: 28px; right: 28px; bottom: 60px;
+    font-family: var(--font-display); font-style: italic;
+    font-size: 38px; line-height: 1.25;
+    color: var(--paper); opacity: 0.92;
+    letter-spacing: 0.005em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    z-index: 2;
+  }
+
+  .ink-hero-eyebrow {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 18px;
+    border-bottom: var(--rule);
+    margin-bottom: 28px;
+  }
+  .ink-hero h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(72px, 9vw, 144px);
+    line-height: 0.86;
+    letter-spacing: -0.025em;
+  }
+  .ink-hero h1 em { color: var(--oxblood); font-weight: 300; font-style: italic; }
+  .ink-hero .deck {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 26px;
+    line-height: 1.35;
+    color: var(--ink-2);
+    margin: 28px 0 32px;
+    max-width: 38ch;
+  }
+  .keyspecs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: var(--rule);
+    margin-bottom: 28px;
+  }
+  .keyspec {
+    padding: 16px 20px;
+    border-right: var(--rule);
+    border-bottom: var(--rule);
+  }
+  .keyspec:nth-child(2n) { border-right: 0; }
+  .keyspec:nth-last-child(-n+2) { border-bottom: 0; }
+  .keyspec .k { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-mute); }
+  .keyspec .v { font-family: var(--font-display); font-size: 28px; margin-top: 4px; }
+
+  .acts {
+    display: flex; gap: 16px; margin-top: 24px;
+  }
+  .acts a {
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+    padding: 12px 18px; border: 1px solid var(--ink);
+  }
+  .acts a.primary { background: var(--ink); color: var(--paper); }
+
+  /* colour-detail card inside the hero meta */
+  .color-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border: var(--rule);
+    margin-bottom: 28px;
+  }
+  .color-grid > div {
+    padding: 14px 16px;
+    border-right: var(--rule);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .color-grid > div:last-child { border-right: 0; }
+  .color-grid .k { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute); }
+  .color-grid .swatch {
+    height: 44px; border: var(--rule); position: relative;
+  }
+  .color-grid .swatch .label-hex {
+    position: absolute; bottom: 4px; left: 4px;
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--paper);
+    text-shadow: 0 0 4px rgba(0,0,0,0.5);
+  }
+  .color-grid .v { font-family: var(--font-display); font-size: 16px; }
+
+  /* writing-sample grid on three papers */
+  .samples-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .sample-card { background: var(--paper); border: var(--rule); display: flex; flex-direction: column; }
+  .sample-card-head { padding: 14px 18px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: var(--rule); }
+  .sample-card-head .nm { font-family: var(--font-display); font-size: 20px; }
+  .sample-card-head .nm em { color: var(--oxblood); font-style: italic; }
+  .sample-card-head .pn { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute); }
+  .sample-body { height: 220px; position: relative; overflow: hidden; padding: 22px; }
+  .sample-body.cream { background: oklch(94% 0.022 90); }
+  .sample-body.cream::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(to bottom, transparent 0 21px, color-mix(in oklch, oklch(34% 0.095 255) 22%, transparent) 21px 22px);
+    pointer-events: none;
+  }
+  .sample-body.ivory { background: oklch(96% 0.014 85); }
+  .sample-body.ivory::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(to bottom, transparent 0 19px, color-mix(in oklch, oklch(34% 0.095 255) 24%, transparent) 19px 20px);
+    pointer-events: none;
+  }
+  .sample-body.bright { background: oklch(98% 0.005 240); }
+  .sample-body.bright::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(circle, color-mix(in oklch, oklch(34% 0.095 255) 40%, transparent) 0.7px, transparent 1.2px);
+    background-size: 14px 14px;
+    pointer-events: none;
+  }
+  .handwrit {
+    position: relative; z-index: 2;
+    font-family: var(--font-display); font-style: italic; font-size: 24px; line-height: 22px;
+    color: oklch(24% 0.06 252);
+    opacity: 0.78;
+    letter-spacing: 0.005em;
+  }
+  .handwrit .l { display: block; }
+  .sample-card-foot { padding: 12px 18px; border-top: var(--rule); display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sample-card-foot .mm { display: flex; flex-direction: column; gap: 2px; }
+  .sample-card-foot .mm .k { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute); }
+  .sample-card-foot .mm .v { font-family: var(--font-display); font-size: 16px; }
+  .sample-card-foot .mm .v em { color: var(--oxblood); }
+
+  /* related rail */
+  .related-inks {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-left: var(--rule); border-top: 1px solid var(--ink);
+  }
+  .related-inks a {
+    border-right: var(--rule); border-bottom: var(--rule);
+    padding: 22px;
+    display: flex; flex-direction: column;
+    background: var(--paper);
+    min-height: 240px;
+  }
+  .related-inks a:hover { background: var(--paper-2); }
+  .related-inks .r-no { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; color: var(--ink-mute); }
+  .related-inks .r-brand { font-family: var(--font-mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-mute); margin-top: 12px; }
+  .related-inks .r-name { font-family: var(--font-display); font-size: 22px; line-height: 1.0; margin-top: 4px; }
+  .related-inks .r-swatch { height: 88px; margin-top: auto; margin-bottom: 12px; position: relative; border: var(--rule); overflow: hidden; }
+  .related-inks .r-swatch::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 30%;
+    background: linear-gradient(to top, var(--shade-low, rgba(0,0,0,0.2)) 0%, transparent 100%);
+    mix-blend-mode: multiply;
+  }
+
+  @media (max-width: 1100px) {
+    .ink-hero { grid-template-columns: 1fr; gap: 32px; }
+    .samples-grid { grid-template-columns: 1fr; }
+    .related-inks { grid-template-columns: 1fr 1fr; }
+    .color-grid { grid-template-columns: 1fr; }
+    .color-grid > div { border-right: 0; border-bottom: var(--rule); }
+    .color-grid > div:last-child { border-bottom: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- top bar -->
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <nav class="topbar-nav">
+      <a href="index.html#archive-pens">Pens</a>
+      <a href="index.html#archive-papers">Papers</a>
+      <a href="ink.html">Inks</a>
+      <a href="index.html#pairings">Pairings</a>
+      <a href="index.html#picker">Find a pairing</a>
+    </nav>
+    <a href="index.html" class="topbar-mark">Pen &amp; Paper</a>
+    <div class="topbar-meta">
+      <span><span class="dot"></span>Specimen</span>
+      <span>The Ink Cupboard</span>
+      <span>Search ⌘K</span>
+    </div>
+  </div>
+</header>
+
+<!-- breadcrumb -->
+<div class="wrap">
+  <nav class="breadcrumb">
+    <span><a href="index.html">Almanac</a> &nbsp;·&nbsp; <a href="ink.html">Ink Cupboard</a> &nbsp;·&nbsp; <span class="crumb-mid">№ 014 — Tsuki-yo</span></span>
+    <span>14 / 64 &nbsp;·&nbsp; <a href="#" style="text-decoration: underline;">← Prev</a> &nbsp;&nbsp; <a href="#" style="text-decoration: underline;">Next →</a></span>
+  </nav>
+</div>
+
+<!-- hero -->
+<div class="wrap">
+  <section class="ink-hero">
+    <div class="ink-hero-visual">
+      <span class="hex">#1C2C47</span>
+      <span class="placeholder-corner">INK · 50 ml · 1:1</span>
+      <div class="writing">— a letter held to lamplight, the copper sheen along its edges.</div>
+    </div>
+    <div>
+      <div class="ink-hero-eyebrow mono">
+        <span>№ 014 · Ink of the Cupboard</span>
+        <span>Sheening · 5/5</span>
+        <span>$ 28 / 50 ml</span>
+      </div>
+      <div class="mono" style="color: var(--oxblood); margin-bottom: 16px;">● Editor's Choice — Sheen</div>
+      <h1>Tsuki-yo<br><em>Moonlit</em><br>Night</h1>
+      <div class="mono" style="margin-top: 28px;">Pilot · Iroshizuku · Japan · est. 2007</div>
+      <p class="deck">A deep blue-black that flashes copper along its troughs — the standard against which other sheening inks are measured.</p>
+
+      <div class="color-grid">
+        <div>
+          <span class="k">Primary</span>
+          <div class="swatch" style="background: oklch(24% 0.06 252)"><span class="label-hex">#1C2C47</span></div>
+          <span class="v">Blue-black</span>
+        </div>
+        <div>
+          <span class="k">Shading (deep)</span>
+          <div class="swatch" style="background: oklch(14% 0.05 252)"><span class="label-hex">#0E1828</span></div>
+          <span class="v">Pool · midnight</span>
+        </div>
+        <div>
+          <span class="k">Sheen</span>
+          <div class="swatch" style="background: oklch(48% 0.12 50)"><span class="label-hex">#B87333</span></div>
+          <span class="v">Copper · at the troughs</span>
+        </div>
+      </div>
+
+      <div class="keyspecs">
+        <div class="keyspec"><div class="k">Wetness</div><div class="v">78 / 100</div></div>
+        <div class="keyspec"><div class="k">Saturation</div><div class="v">84 / 100</div></div>
+        <div class="keyspec"><div class="k">Dry time (M)</div><div class="v">22 s</div></div>
+        <div class="keyspec"><div class="k">Family</div><div class="v">Sheening</div></div>
+      </div>
+
+      <div class="acts">
+        <a href="#pairings-here" class="primary">See its pairings →</a>
+        <a href="index.html#compare">Compare with another ink</a>
+        <a href="#">Save to cabinet</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ─────────────────────────────── ATTRIBUTES ─────────────────────────────── -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · ATTRIBUTES SECTION (mirrors pen.html / paper.html structure)
+  Six grouped cards, one per schema sub-object on `Ink` (CLAUDE.md §7):
+      i.   Identity & Provenance     → top-level ink fields
+      ii.  Colour & Hue (tall)        → ink.color.*
+      iii. Chemistry                  → ink.chemistry.*
+      iv.  Behaviour on the Page      → ink.performance.*
+      v.   Dry Time · by Nib           → ink.performance.dryTimeByNib.*
+      vi.  Pairing & Best Use (wide)   → ink.pairing.*
+
+  Spectrum-bar dots: `<i style="left:NN%">` where NN equals the score.
+  A 1–5 score multiplied by 20 yields the percent.
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="attributes">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 01 · Attributes</span>
+      <h2 class="section-title">Every <em>aspect</em>, measured.</h2>
+      <span class="section-kicker">All readings on Tomoe River S, Pilot 14k Medium, 21 °C, 48 % RH, 2700 K.</span>
+    </div>
+
+    <div class="attr-groups">
+
+      <!-- Identity & Provenance -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Identity <em>&amp;</em> Provenance</span>
+          <span class="num">i.</span>
+        </div>
+        <p class="attr-group-lede">The maker, the year, the line — and the language of the name itself.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">Brand</span><span class="value">Pilot · Iroshizuku</span></div>
+          <div class="attr-line"><span class="label">Model</span><span class="value">Tsuki-yo · 月夜</span></div>
+          <div class="attr-line"><span class="label">English</span><span class="value">Moonlit Night</span></div>
+          <div class="attr-line"><span class="label">Line</span><span class="value">Iroshizuku · "colour droplets"</span></div>
+          <div class="attr-line"><span class="label">Country</span><span class="value">Japan</span></div>
+          <div class="attr-line"><span class="label">Year introduced</span><span class="value">2007</span></div>
+          <div class="attr-line"><span class="label">Archive number</span><span class="value">№ 014 / 64</span></div>
+          <div class="attr-line"><span class="label">Status</span><span class="value">In production · <em>widely stocked</em></span></div>
+        </div>
+      </div>
+
+      <!-- Colour & Hue (tall) -->
+      <div class="attr-group tall">
+        <div class="attr-group-head">
+          <span class="ttl">Colour <em>&amp;</em> Hue</span>
+          <span class="num">ii.</span>
+        </div>
+        <p class="attr-group-lede">The primary read, the pool at the trough, the sheen at the angle, and how much the colour shifts as it dries.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">Primary hex</span><span class="value">#1C2C47</span></div>
+          <div class="attr-line"><span class="label">Primary oklch</span><span class="value">oklch(24% 0.06 252)</span></div>
+          <div class="attr-line"><span class="label">Colour name</span><span class="value">Moonlit Night</span></div>
+          <div class="attr-line"><span class="label">Hue family</span><span class="value">Blue-black</span></div>
+          <div class="attr-line"><span class="label">Warmth</span><span class="value">Cool</span></div>
+          <div class="attr-line"><span class="label">Shading (high)</span><span class="value">#3A4B6A — surface mid-tone</span></div>
+          <div class="attr-line"><span class="label">Shading (low)</span><span class="value">#0E1828 — deep pool</span></div>
+          <div class="attr-line"><span class="label">Sheen colour</span><span class="value">#B87333 — copper</span></div>
+          <div class="attr-line"><span class="label">Sheen angle</span><span class="value">~ 30° from page</span></div>
+          <div class="attr-line"><span class="label">Shimmer</span><span class="value">None</span></div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Wet vs dry shift</span><span class="value">22 / 100 — modest</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:22%"></i></div>
+              <div class="ends"><span>Same</span><span>Subtle</span><span>Modest</span><span>Strong</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chemistry -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Chemistry</span>
+          <span class="num">iii.</span>
+        </div>
+        <p class="attr-group-lede">The liquid itself — pH, viscosity, how it behaves in the bottle and inside a demonstrator.</p>
+        <div class="attr-list">
+          <div class="attr-line"><span class="label">pH</span><span class="value">7.4 — slightly alkaline</span></div>
+          <div class="attr-line"><span class="label">Viscosity (cP, 20 °C)</span><span class="value">2.2 cP</span></div>
+          <div class="attr-line"><span class="label">Surface tension</span><span class="value">42 mN / m</span></div>
+          <div class="attr-line"><span class="label">Dye loading</span><span class="value">~ 3.4 %</span></div>
+          <div class="attr-line"><span class="label">Water resistance</span><span class="value">None — not permanent</span></div>
+          <div class="attr-line"><span class="label">Permanent</span><span class="value">No</span></div>
+          <div class="attr-line"><span class="label">Archival</span><span class="value">No — ISO 11798 not claimed</span></div>
+          <div class="attr-line"><span class="label">Bleach resistant</span><span class="value">No</span></div>
+          <div class="attr-line"><span class="label">Maintenance</span><span class="value">Low</span></div>
+          <div class="attr-line"><span class="label">Demonstrator safe</span><span class="value">Yes — no staining observed</span></div>
+        </div>
+      </div>
+
+      <!-- Behaviour on the page -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Behaviour <em>on the Page</em></span>
+          <span class="num">iv.</span>
+        </div>
+        <p class="attr-group-lede">Wetness, saturation, sheen, shading — and how feathering and ghosting test on standard cream.</p>
+        <div class="attr-list">
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Wetness</span><span class="value">78 / 100</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:78%"></i></div>
+              <div class="ends"><span>Dry</span><span>Medium</span><span>Wet</span><span>Sopping</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Saturation</span><span class="value">84 / 100</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:84%"></i></div>
+              <div class="ends"><span>Pale</span><span>Mid</span><span>Saturated</span><span>Bold</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Shading visibility</span><span class="value">4 / 5</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:80%"></i></div>
+              <div class="ends"><span>Flat</span><span>Modest</span><span>Visible</span><span>Vivid</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Sheen visibility</span><span class="value">5 / 5</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:100%"></i></div>
+              <div class="ends"><span>Matte</span><span>Visible</span><span>Pronounced</span><span>Mirror</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Feathering</span><span class="value">1 / 5 — nil</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:20%"></i></div>
+              <div class="ends"><span>Nil</span><span>Trace</span><span>Visible</span><span>Heavy</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Ghosting</span><span class="value">2 / 5 — slight</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:40%"></i></div>
+              <div class="ends"><span>None</span><span>Slight</span><span>Moderate</span><span>Heavy</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Behaviour on cream</span><span class="value italic serif">Richer · sheens more</span></div>
+          <div class="attr-line"><span class="label">Behaviour on bright</span><span class="value italic serif">Crisper · sheen muted</span></div>
+        </div>
+      </div>
+
+      <!-- Dry time by nib -->
+      <div class="attr-group">
+        <div class="attr-group-head">
+          <span class="ttl">Dry Time <em>·</em> by Nib</span>
+          <span class="num">v.</span>
+        </div>
+        <p class="attr-group-lede">Seconds to a smudge-free pass on the standard cream paper.</p>
+        <div class="attr-list">
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Extra-fine (EF)</span><span class="value">14 s</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:28%"></i></div>
+              <div class="ends"><span>5 s</span><span>30 s</span><span>60 s</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Fine (F)</span><span class="value">18 s</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:36%"></i></div>
+              <div class="ends"><span>5 s</span><span>30 s</span><span>60 s</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Medium (M)</span><span class="value">22 s</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:44%"></i></div>
+              <div class="ends"><span>5 s</span><span>30 s</span><span>60 s</span></div>
+            </div>
+          </div>
+          <div class="attr-line with-meter">
+            <div class="row"><span class="label">Broad (B)</span><span class="value">34 s</span></div>
+            <div class="meter"><div class="scale-bar"><i style="left:64%"></i></div>
+              <div class="ends"><span>5 s</span><span>30 s</span><span>60 s</span></div>
+            </div>
+          </div>
+          <div class="attr-line"><span class="label">Left-hand viable</span><span class="value">With patience · EF preferred</span></div>
+          <div class="attr-line"><span class="label">Test paper</span><span class="value">Tomoe River S · 52 gsm</span></div>
+        </div>
+      </div>
+
+      <!-- Pairing & Best Use (wide) -->
+      <div class="attr-group wide">
+        <div class="attr-group-head">
+          <span class="ttl">Pairing <em>&amp;</em> Best Use</span>
+          <span class="num">vi.</span>
+        </div>
+        <p class="attr-group-lede">Where this ink belongs in the cabinet — by nib, by paper, by occasion.</p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+          <div>
+            <div class="attr-line" style="border-bottom:0;"><span class="label">Best for nib size</span></div>
+            <div class="attr-tag-row">
+              <span class="tag primary">M</span>
+              <span class="tag primary">B</span>
+              <span class="tag primary">BB</span>
+              <span class="tag">Stub</span>
+              <span class="tag">Soft</span>
+            </div>
+            <div class="attr-line" style="border-bottom:0; padding-top:18px;"><span class="label">Best for paper tone</span></div>
+            <div class="attr-tag-row">
+              <span class="tag primary">Cream</span>
+              <span class="tag primary">Ivory</span>
+              <span class="tag">Bright white</span>
+            </div>
+            <div class="attr-line" style="border-bottom:0; padding-top:18px;"><span class="label">Best for paper finish</span></div>
+            <div class="attr-tag-row">
+              <span class="tag primary">Smooth · sized</span>
+              <span class="tag">Vellum</span>
+            </div>
+          </div>
+          <div>
+            <div class="attr-line" style="border-bottom:0;"><span class="label">Best for use</span></div>
+            <div class="attr-tag-row">
+              <span class="tag primary">Correspondence</span>
+              <span class="tag primary">Journaling</span>
+              <span class="tag">Margin notes</span>
+              <span class="tag">Signatures</span>
+            </div>
+            <div class="attr-line" style="border-bottom:0; padding-top:18px;"><span class="label">Best for hour</span></div>
+            <div class="attr-tag-row">
+              <span class="tag primary">Evening</span>
+              <span class="tag primary">Night</span>
+              <span class="tag">Afternoon</span>
+            </div>
+            <div class="attr-line" style="border-bottom:0; padding-top:18px;"><span class="label">Avoid for</span></div>
+            <div class="attr-tag-row">
+              <span class="tag">Document-archive</span>
+              <span class="tag">Waterlogged hands</span>
+              <span class="tag">Coated paper</span>
+            </div>
+          </div>
+          <div>
+            <div class="attr-line" style="border-bottom:0;"><span class="label">Recommended pens</span></div>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; padding-top: 8px;">
+              <li style="display:flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; border-bottom: var(--rule); font-family: var(--font-display); font-size: 17px;"><span>Pilot Custom 823</span><span class="mono" style="color: var(--ink-mute);">№ 003</span></li>
+              <li style="display:flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; border-bottom: var(--rule); font-family: var(--font-display); font-size: 17px;"><span>Sailor Pro Gear</span><span class="mono" style="color: var(--ink-mute);">№ 038</span></li>
+              <li style="display:flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; border-bottom: var(--rule); font-family: var(--font-display); font-size: 17px;"><span>Pelikan M800</span><span class="mono" style="color: var(--ink-mute);">№ 011</span></li>
+            </ul>
+            <div class="attr-line" style="border-bottom:0; padding-top:14px;"><span class="label">Recommended papers</span></div>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; padding-top: 8px;">
+              <li style="display:flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; border-bottom: var(--rule); font-family: var(--font-display); font-size: 17px;"><span>Tomoe River S</span><span class="mono" style="color: var(--ink-mute);">№ 001</span></li>
+              <li style="display:flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; border-bottom: var(--rule); font-family: var(--font-display); font-size: 17px;"><span>Apica CD Premium</span><span class="mono" style="color: var(--ink-mute);">№ 071</span></li>
+              <li style="display:flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; border-bottom: var(--rule); font-family: var(--font-display); font-size: 17px;"><span>Sailor Profit Note</span><span class="mono" style="color: var(--ink-mute);">№ 089</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Editor's strip -->
+    <div class="editor-strip">
+      <div>
+        <h4>Editor's note · M. Hoshino</h4>
+        <p class="quote">An ink the rest of the cupboard is benchmarked against. Lay it down with a generous nib on a paper that refuses to bleed, and the night arrives on the page in the time it takes to turn off the desk lamp.</p>
+      </div>
+      <div>
+        <h4>Colour story</h4>
+        <p style="font-family: var(--font-display); font-size: 17px; line-height: 1.5; color: var(--ink-2);">From the line of Iroshizuku — "colour droplets" — each ink named for a moment in the Japanese natural year. <em style="color: var(--oxblood); font-style: italic;">Tsuki-yo</em> is the moon, viewed from a window, on a night cool enough to want the lamp on.</p>
+      </div>
+      <div>
+        <h4>Bottle</h4>
+        <p style="font-family: var(--font-display); font-size: 22px; line-height: 1.3; margin-bottom: 8px;">50 ml · Iroshizuku flask<br>Glass · cork-stopper</p>
+        <p style="font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; color: var(--ink-mute); text-transform: uppercase;">Tier II · $ 0.56 per ml</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── ON THREE PAPERS ─────────────────────────────── -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · SAMPLES ON THREE PAPERS
+  Renders the same ink on three different papers — joined via
+      ink.pairing.recommendedPaperIds.slice(0,3)  → join to papers
+  Per-card field map:
+    .nm "Tomoe River S"        → paper.brand + " " + paper.model
+    .pn "52 GSM · CREAM"       → paper.substance.gsm + " GSM · " + paper.appearance.tone
+    .sample-body class         → paper.appearance.swatchClass
+    Affinity                   → ink.pairing.affinityScores[paper.id]
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="on-papers">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 02 · On the Page</span>
+      <h2 class="section-title">The same <em>ink</em>, on three different papers.</h2>
+      <span class="section-kicker">All samples in a Pilot 14k Medium, posted grip, indoor 2700 K.</span>
+    </div>
+
+    <div class="samples-grid">
+      <article class="sample-card">
+        <div class="sample-card-head"><span class="nm">Tomoe River <em>S</em></span><span class="pn">52 GSM · CREAM</span></div>
+        <div class="sample-body cream">
+          <div class="handwrit">
+            <span class="l">— A letter, weighed in light;</span>
+            <span class="l">the cobalt sits upon the cream,</span>
+            <span class="l">flashing copper at the edges.</span>
+          </div>
+        </div>
+        <div class="sample-card-foot">
+          <div class="mm"><span class="k">Affinity</span><span class="v"><em>94</em></span></div>
+          <div class="mm"><span class="k">Sheen</span><span class="v">Marked</span></div>
+          <div class="mm"><span class="k">Dry</span><span class="v">22 s</span></div>
+        </div>
+      </article>
+
+      <article class="sample-card">
+        <div class="sample-card-head"><span class="nm">Apica <em>CD</em></span><span class="pn">81 GSM · IVORY</span></div>
+        <div class="sample-body ivory">
+          <div class="handwrit">
+            <span class="l">— a steadier line, ruled:</span>
+            <span class="l">sheen is quieter on ivory,</span>
+            <span class="l">the colour itself more honest.</span>
+          </div>
+        </div>
+        <div class="sample-card-foot">
+          <div class="mm"><span class="k">Affinity</span><span class="v"><em>86</em></span></div>
+          <div class="mm"><span class="k">Sheen</span><span class="v">Visible</span></div>
+          <div class="mm"><span class="k">Dry</span><span class="v">18 s</span></div>
+        </div>
+      </article>
+
+      <article class="sample-card">
+        <div class="sample-card-head"><span class="nm">Rhodia <em>№ 16</em></span><span class="pn">80 GSM · BRIGHT</span></div>
+        <div class="sample-body bright">
+          <div class="handwrit">
+            <span class="l">— crisp, dot-by-dot;</span>
+            <span class="l">the sheen lies down,</span>
+            <span class="l">the cobalt is all you read.</span>
+          </div>
+        </div>
+        <div class="sample-card-foot">
+          <div class="mm"><span class="k">Affinity</span><span class="v"><em>78</em></span></div>
+          <div class="mm"><span class="k">Sheen</span><span class="v">Quiet</span></div>
+          <div class="mm"><span class="k">Dry</span><span class="v">14 s</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── RECOMMENDED PAIRINGS ─────────────────────────────── -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · RECOMMENDED PAIRINGS
+  Pairings that use this ink (look up pairings where conditions.inkUsed
+  matches ink.model). Source:
+      const { data } = await sb.from('pairings')
+        .select('*, pen:pens(*), paper:papers(*)')
+        .filter('conditions->>inkUsed', 'eq', ink.model)
+        .order('affinity_score', { ascending: false })
+        .limit(3);
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="pairings-here">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 03 · Pairings with this Ink</span>
+      <h2 class="section-title">Marriages tested in <em>Tsuki-yo</em>.</h2>
+      <span class="section-kicker">Sorted by affinity. Click through for the writing sample.</span>
+    </div>
+
+    <div class="picker-results" style="border-left:0; border-right:0;">
+      <a href="pairing.html" class="picker-result">
+        <span class="pr-rank">i.</span>
+        <div>
+          <div class="pr-title">Custom 823 <em>×</em> Tomoe River</div>
+          <div class="pr-sub">A wet vacuum-filler finds its translucent altar.</div>
+        </div>
+        <div class="pr-score"><span class="lbl">Affinity</span>94</div>
+      </a>
+      <a href="pairing.html" class="picker-result">
+        <span class="pr-rank">ii.</span>
+        <div>
+          <div class="pr-title">Sailor Pro Gear <em>×</em> Tomoe River</div>
+          <div class="pr-sub">Feedback nib over thin paper — for the keepers among letters.</div>
+        </div>
+        <div class="pr-score"><span class="lbl">Affinity</span>89</div>
+      </a>
+      <a href="pairing.html" class="picker-result">
+        <span class="pr-rank">iii.</span>
+        <div>
+          <div class="pr-title">Pelikan M800 <em>×</em> Apica CD</div>
+          <div class="pr-sub">A broad German nib, quieted by a sized Japanese ivory.</div>
+        </div>
+        <div class="pr-score"><span class="lbl">Affinity</span>82</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── RELATED INKS ─────────────────────────────── -->
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  CLAUDE CODE · RELATED INKS RAIL
+  Other inks of kindred temperament. Sort heuristic: same family +
+  similar performance.sheenVisibility + nearby hue. Source:
+      const { data } = await sb.from('inks')
+        .select('id, brand, model, color, performance, family')
+        .eq('family', ink.family)
+        .neq('id', ink.id)
+        .limit(4);
+  Each tile:
+    .r-no              → "№ " + ink.archive_number
+    .r-brand           → ink.brand
+    .r-name            → ink.model
+    .r-swatch bg       → ink.color.oklch (or hex)
+    .r-swatch --shade-low → ink.color.shadingLow
+    href               → /inks/:ink.id
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<section class="section" id="related">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-no">№ 04 · Also in the Cupboard</span>
+      <h2 class="section-title">Inks of <em>kindred</em> temperament.</h2>
+      <span class="section-kicker">Other sheening, blue-black, and evening-coloured inks.</span>
+    </div>
+
+    <div class="related-inks">
+      <a href="ink-detail.html" style="--shade-low: oklch(18% 0.09 20);">
+        <span class="r-no">№ 041</span>
+        <span class="r-brand">Diamine · UK</span>
+        <span class="r-name">Oxblood</span>
+        <div class="r-swatch" style="background: oklch(28% 0.10 22);"></div>
+      </a>
+      <a href="ink-detail.html" style="--shade-low: oklch(22% 0.07 195);">
+        <span class="r-no">№ 028</span>
+        <span class="r-brand">Sailor · Japan</span>
+        <span class="r-name">Yama-dori</span>
+        <div class="r-swatch" style="background: oklch(34% 0.08 195);"></div>
+      </a>
+      <a href="ink-detail.html" style="--shade-low: oklch(12% 0.02 252);">
+        <span class="r-no">№ 053</span>
+        <span class="r-brand">KWZ · Poland</span>
+        <span class="r-name">I/G Blue-Black</span>
+        <div class="r-swatch" style="background: oklch(22% 0.04 252);"></div>
+      </a>
+      <a href="ink-detail.html" style="--shade-low: oklch(24% 0.11 265);">
+        <span class="r-no">№ 019</span>
+        <span class="r-brand">Pilot · Japan</span>
+        <span class="r-name">Asa-gao</span>
+        <div class="r-swatch" style="background: oklch(38% 0.13 265);"></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- colophon -->
+<footer class="colophon">
+  <div class="wrap">
+    <div class="colophon-grid">
+      <div>
+        <div class="colophon-mark">Pen<span style="color: var(--oxblood); font-style: italic; padding: 0 .04em;">&amp;</span>Paper</div>
+        <p>A pairing almanac for the fountain pen and its proper page. The Ink Cupboard is published as a department of each quarterly issue.</p>
+      </div>
+      <div>
+        <h4>The Archive</h4>
+        <ul>
+          <li><a href="index.html#archive-pens">172 Pens</a></li>
+          <li><a href="index.html#archive-papers">140 Papers</a></li>
+          <li><a href="ink.html">64 Inks</a></li>
+          <li><a href="index.html#pairings">48 Pairings</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>This Ink</h4>
+        <ul>
+          <li><a href="#attributes">Attributes</a></li>
+          <li><a href="#on-papers">Writing samples</a></li>
+          <li><a href="#pairings-here">Marriages with this ink</a></li>
+          <li><a href="#related">Related inks</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Return</h4>
+        <p style="margin-bottom: 14px;">Back to the Cupboard, or the full Almanac.</p>
+        <a href="ink.html" style="font-family: var(--font-display); font-size: 22px; border-bottom: 1px solid var(--ink); padding-bottom: 4px; font-style: italic;">← To the Cupboard</a>
+      </div>
+    </div>
+    <div class="colophon-foot">
+      <span>© MMXXVI Pen &amp; Paper</span>
+      <span>Specimen № 014 · Tsuki-yo</span>
+      <span>Issue IV · 02 · Spring</span>
+    </div>
+  </div>
+</footer>
+
+<script src="search.js" defer></script>
+</body>
+</html>

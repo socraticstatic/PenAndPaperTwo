@@ -3,8 +3,7 @@
 //
 //   mcp__supabase__generate_typescript_types(project_id="gmmwypnlqjqcezwxzbiw")
 //
-// Do not hand-edit. Commit changes to this file alongside the migration
-// that produced them.
+// Do not hand-edit. Commit changes alongside the migration that produced them.
 
 export type Json =
   | string
@@ -15,11 +14,95 @@ export type Json =
   | Json[]
 
 export type Database = {
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
+  __InternalSupabase: { PostgrestVersion: "14.5" }
   public: {
     Tables: {
+      inks: {
+        Row: {
+          affinity_scores: Json | null
+          archive_number: number
+          brand: string
+          chemistry: Json | null
+          color: Json
+          country_of_origin: string
+          created_at: string | null
+          editorial: Json
+          family: string
+          hue_family: string
+          id: string
+          in_production: boolean
+          model: string
+          model_english: string | null
+          pairing: Json | null
+          performance: Json
+          photos: Json
+          pricing: Json | null
+          recommended_paper_ids: string[] | null
+          recommended_pen_ids: string[] | null
+          subfamily: string | null
+          updated_at: string | null
+          variant: string | null
+          warmth: string
+          year_introduced: number | null
+        }
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+        Relationships: []
+      }
+      pairings: {
+        Row: {
+          affinity_score: number
+          archive_number: number
+          conditions: Json
+          created_at: string | null
+          editorial: Json
+          id: string
+          is_editors_choice: boolean
+          is_pairing_of_week: boolean
+          measurements: Json
+          mood: string[]
+          paper_id: string
+          pen_id: string
+          scoring: Json
+          updated_at: string | null
+          use_case: string
+          writing_sample_photo: string | null
+        }
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+        Relationships: []
+      }
+      papers: {
+        Row: {
+          affinity_scores: Json | null
+          appearance: Json
+          archive_number: number
+          brand: string
+          country_of_origin: string
+          created_at: string | null
+          editorial: Json
+          format: Json
+          heritage: Json | null
+          id: string
+          in_production: boolean
+          mill: string | null
+          model: string
+          performance: Json
+          photos: Json
+          pricing: Json | null
+          recommended_pen_ids: string[] | null
+          substance: Json
+          successor_of: string | null
+          surface: Json
+          texture: Json | null
+          updated_at: string | null
+          variant: string | null
+          year_introduced: number | null
+        }
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+        Relationships: []
+      }
       pens: {
         Row: {
           affinity_scores: Json | null
@@ -50,111 +133,14 @@ export type Database = {
           year_discontinued: number | null
           year_introduced: number
         }
-        Insert: {
-          affinity_scores?: Json | null
-          archive_number: number
-          body: Json
-          brand: string
-          city_of_origin?: string | null
-          country_of_origin: string
-          created_at?: string | null
-          dimensions: Json
-          edition?: Json | null
-          editorial: Json
-          ergonomics?: Json | null
-          generation?: string | null
-          heritage?: Json | null
-          id: string
-          in_production?: boolean
-          ink_delivery: Json
-          model: string
-          nib: Json
-          performance: Json
-          photos: Json
-          pricing: Json
-          recommended_paper_ids?: string[] | null
-          service?: Json | null
-          updated_at?: string | null
-          variant?: string | null
-          year_discontinued?: number | null
-          year_introduced: number
-        }
-        Update: {
-          affinity_scores?: Json | null
-          archive_number?: number
-          body?: Json
-          brand?: string
-          city_of_origin?: string | null
-          country_of_origin?: string
-          created_at?: string | null
-          dimensions?: Json
-          edition?: Json | null
-          editorial?: Json
-          ergonomics?: Json | null
-          generation?: string | null
-          heritage?: Json | null
-          id?: string
-          in_production?: boolean
-          ink_delivery?: Json
-          model?: string
-          nib?: Json
-          performance?: Json
-          photos?: Json
-          pricing?: Json
-          recommended_paper_ids?: string[] | null
-          service?: Json | null
-          updated_at?: string | null
-          variant?: string | null
-          year_discontinued?: number | null
-          year_introduced: number
-        }
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
         Relationships: []
       }
     }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    Views: { [_ in never]: never }
+    Functions: { [_ in never]: never }
+    Enums: { [_ in never]: never }
+    CompositeTypes: { [_ in never]: never }
   }
 }
-
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never

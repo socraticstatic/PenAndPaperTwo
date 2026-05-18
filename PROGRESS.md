@@ -15,6 +15,7 @@ Two parallel numberings to avoid confusion:
 |---|---|---|---|
 | **P1** | Foundation: repo + scaffold + literal port of design | ✅ done (2026-05-17 → 2026-05-18) | Next.js 15 App Router, all 6 pages rendered via `html-react-parser`, Supabase + Stripe clients scaffolded, repo at [socraticstatic/PenAndPaperTwo](https://github.com/socraticstatic/PenAndPaperTwo) |
 | **P2** | Vertical slice: `pens` table → live `/pen` route | ✅ done (2026-05-18) | Supabase project [`pen-and-paper-two`](https://supabase.com/dashboard/project/gmmwypnlqjqcezwxzbiw) (ref `gmmwypnlqjqcezwxzbiw`, us-west-1). `pens` table + 10 facet indexes + RLS public-read. Pilot Custom 823 seeded. `/pen` route binds 6 hero elements (breadcrumb, H1, deck, eyebrow row, key-spec table) from the row; rest of page is still prototype markup. Acceptance test passed: edited `model` to "Custom 823 ✓", reload propagated to both crumb + H1; reverted. |
+| **P3** | Extend dynamic backbone: papers + inks + pairings | ✅ done (2026-05-18) | 3 more tables + RLS + indexes. Seeded Tomoe River S, Iroshizuku Tsuki-yo, Pairing №047 (Custom 823 × Tomoe). `/paper`, `/ink-detail`, `/pairing` all DB-driven for hero region (crumb, H1, deck, eyebrow row, paper keyspecs). Acceptance test: edited paper `gsm` 52→68, reload propagated to eyebrow AND weight keyspec; reverted. Production build clean (4 dynamic routes, 2 static). |
 
 ### P2 design constraints
 
@@ -30,12 +31,12 @@ Two parallel numberings to avoid confusion:
 | D-Phase | Spec asks for | Status | Touched in |
 |---|---|---|---|
 | D1 | Create Supabase project, save keys | 🟥 | — |
-| D2 | Create tables (pens, papers, pairings, inks) — JSONB schemas | 🟧 partial | P2 — `pens` only with full schema + indexes. `papers` / `pairings` / `inks` still 🟥. Migration: `supabase/migrations/20260518164000_pens_table.sql`. |
-| D3 | Enable Row Level Security | 🟧 partial | P2 — `pens` RLS enabled + public-read policy. Other tables 🟥. Migration: `supabase/migrations/20260518164100_pens_rls.sql`. |
+| D2 | Create tables (pens, papers, pairings, inks) — JSONB schemas | ✅ done | P2 + P3. All 4 tables with full JSONB schemas + facet indexes. Inks DDL extended beyond §8.1's "Phase 2" thin shape to match §7 schema. |
+| D3 | Enable Row Level Security | ✅ done | P2 + P3. Public-read policies on all 4 tables. No write policies — Supabase Studio writes via service-role. Editor JWT policies are D11. |
 | D4 | Facet + Sommelier RPC functions | 🟥 | — |
 | D5 | Storage bucket `media` for transparent PNGs | 🟥 | — |
-| D6 | Seed initial data SQL | 🟧 partial | P2 — Pilot Custom 823 seeded. `supabase/seeds/01_pilot_custom_823.sql`. |
-| D7 | Replace sample HTML, page by page (D7.1 index … D7.6 ink-detail) | 🟧 partial | P2 — `/pen` is DB-driven for 6 hero elements (D7.2 partial). The 5 other pages still render prototype HTML verbatim. |
+| D6 | Seed initial data SQL | 🟧 partial | P2 + P3 seeded 4 rows total — one per entity (Custom 823, Tomoe River S, Tsuki-yo, the 823×Tomoe pairing). Full archive seeding TBD. |
+| D7 | Replace sample HTML, page by page (D7.1 index … D7.6 ink-detail) | 🟧 partial | P2 + P3 — D7.2/D7.3/D7.4/D7.6 are DB-driven for hero regions. D7.1 (`/`) and D7.5 (`/ink` archive grid) still render prototype HTML verbatim. Detail pages below the hero are still hard-coded prototype markup — the binding pattern is proven; extending it down each page is mechanical. |
 | D8 | Wire the Sommelier picker (`/api/picker`) | 🟥 | — |
 | D9 | Wire Compare drawer (`/api/compare`) | 🟥 | — |
 | D10 | Search & recently viewed (Supabase index + localStorage) | 🟥 | — |
@@ -58,4 +59,4 @@ Two parallel numberings to avoid confusion:
 
 ---
 
-*Last updated: 2026-05-18 by P2 close-out (vertical slice).*
+*Last updated: 2026-05-18 by P3 close-out (papers + inks + pairings live).*

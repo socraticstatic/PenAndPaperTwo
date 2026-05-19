@@ -25,6 +25,11 @@ import {
 } from "@/lib/supabase/page-copy";
 import { CompareTray } from "@/components/CompareTray";
 import { CompareGrid } from "@/components/CompareGrid";
+import {
+  PairingsCatalogueSection,
+  PaperArchiveSection,
+  PenArchiveSection,
+} from "./archive-sections";
 
 // Find the enclosing <section id="…"> by walking up parents. html-
 // react-parser exposes parent links on the parsed DOM, so we can
@@ -516,6 +521,48 @@ export function buildHomeReplace(data: {
           if (value) return <p className="principle-body">{value}</p>;
         }
       }
+    }
+
+    // ─── Pen archive section (filterable) ────────────────────
+    if (node.name === "section" && node.attribs.id === "archive-pens") {
+      return (
+        <PenArchiveSection
+          rows={data.pens}
+          totalCount={data.totals.pens}
+          sectionNo={copy(data.pageCopy, "home.archive_pens.section_no", vars)}
+          titleTemplate={copy(data.pageCopy, "home.archive_pens.title_words", vars)}
+          kicker={copy(data.pageCopy, "home.archive_pens.kicker", vars)}
+          searchPlaceholder={copy(
+            data.pageCopy,
+            "home.archive_pens.search_placeholder",
+            vars,
+          )}
+        />
+      );
+    }
+
+    // ─── Paper archive section (filterable) ──────────────────
+    if (node.name === "section" && node.attribs.id === "archive-papers") {
+      return (
+        <PaperArchiveSection
+          rows={data.papers}
+          sectionNo={copy(data.pageCopy, "home.archive_papers.section_no", vars)}
+          titleTemplate={copy(data.pageCopy, "home.archive_papers.title_words", vars)}
+          kicker={copy(data.pageCopy, "home.archive_papers.kicker", vars)}
+        />
+      );
+    }
+
+    // ─── Pairings catalogue (filterable) ─────────────────────
+    if (node.name === "section" && node.attribs.id === "pairings") {
+      return (
+        <PairingsCatalogueSection
+          rows={data.pairings}
+          sectionNo={copy(data.pageCopy, "home.pairings.section_no", vars)}
+          titleTemplate={copy(data.pageCopy, "home.pairings.title_words", vars)}
+          kicker={copy(data.pageCopy, "home.pairings.kicker", vars)}
+        />
+      );
     }
 
     // ─── Featured pairing-of-the-week section ────────────────

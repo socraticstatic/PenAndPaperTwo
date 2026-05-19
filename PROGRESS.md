@@ -45,7 +45,7 @@ Two parallel numberings to avoid confusion:
 | D1 | Create Supabase project, save keys | 🟥 | — |
 | D2 | Create tables (pens, papers, pairings, inks) — JSONB schemas | ✅ done | P2 + P3. All 4 tables with full JSONB schemas + facet indexes. Inks DDL extended beyond §8.1's "Phase 2" thin shape to match §7 schema. |
 | D3 | Enable Row Level Security | ✅ done | P2 + P3. Public-read policies on all 4 tables. No write policies — Supabase Studio writes via service-role. Editor JWT policies are D11. |
-| D4 | Facet + Sommelier RPC functions | 🟥 | — |
+| D4 | Facet RPC functions | ✅ done (2026-05-18) | Client-side facet filtering via `<FilterableArchive kind="pen|paper|ink|pairing">`. Live chip counts (recomputed excluding the chip's own facet for "if I also picked this" intuition), AND across groups + OR within. Sommelier RPC = the pairing engine RPCs already shipped in P11. Wired into pen archive (7 facet groups), paper archive (5), ink cupboard (5), pairings catalogue (3) on home and /ink. Click "Germany" → grid filters to 2 pens. URL state deferred; in-DB facet RPCs to be added when row counts exceed ~5000. |
 | D5 | Storage bucket `media` for transparent PNGs | 🟥 | — |
 | D6 | Seed initial data SQL | 🟧 partial | P2 + P3 seeded 4 rows total — one per entity (Custom 823, Tomoe River S, Tsuki-yo, the 823×Tomoe pairing). Full archive seeding TBD. |
 | D7 | Replace sample HTML, page by page (D7.1 index … D7.6 ink-detail) | ✅ done (substantially) | All 6 prototype pages now bind from DB: home grids (P5), archive grids (P5), detail-page heroes (P2+P3), detail-page attribute cards (P7). Remaining hard-coded chrome: home pairing-of-the-week hero, sticky comparison tray, masthead numbers — editorial structure, not entity data. |
@@ -71,4 +71,4 @@ Two parallel numberings to avoid confusion:
 
 ---
 
-*Last updated: 2026-05-18 by P10.2 close-out (full-coverage compare grid).*
+*Last updated: 2026-05-18 by D4 close-out (filter chips wired).*

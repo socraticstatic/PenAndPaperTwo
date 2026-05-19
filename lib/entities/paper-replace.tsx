@@ -17,6 +17,7 @@ import { formatArchive, hasClass } from "./format";
 import { PaperAttributeCards } from "./paper-attribute-cards";
 import { WritingSamples } from "./writing-samples";
 import { OptimalPairings } from "./optimal-pairings";
+import { AddToCompareButton } from "@/components/AddToCompareButton";
 import type {
   PairingWithSides,
   PenMatchForPaper,
@@ -154,6 +155,28 @@ export function buildPaperReplace(
     // Engine recommendations: top pens for this paper.
     if (node.name === "section" && node.attribs.id === "related") {
       return <OptimalPairings side="for-paper" matches={penMatches} />;
+    }
+
+    if (node.name === "div" && hasClass(node, "acts")) {
+      const appearance = (p.appearance ?? {}) as Record<string, unknown>;
+      return (
+        <div className="acts">
+          <a href="#pairings-here" className="primary">
+            See its pairings →
+          </a>
+          <AddToCompareButton
+            item={{
+              id: p.id,
+              kind: "paper",
+              brand: p.brand,
+              model: p.model,
+              variant: p.variant ?? undefined,
+              archiveNumber: p.archive_number,
+              paperTone: (appearance.swatchClass as string | undefined) ?? "cream",
+            }}
+          />
+        </div>
+      );
     }
 
     if (node.name === "div" && hasClass(node, "keyspecs")) {

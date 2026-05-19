@@ -23,6 +23,8 @@ import {
   ucfirst,
   type CopyMap,
 } from "@/lib/supabase/page-copy";
+import { CompareTray } from "@/components/CompareTray";
+import { CompareGrid } from "@/components/CompareGrid";
 
 // Find the enclosing <section id="…"> by walking up parents. html-
 // react-parser exposes parent links on the parsed DOM, so we can
@@ -301,38 +303,6 @@ function FeaturedPairing({ pr }: { pr: PairingWithSides | null }) {
   );
 }
 
-// ─── Comparison tray (empty state) ─────────────────────────────
-// Renders 4 empty slots. NOT fake-populated. The real compare engine
-// (state, add/remove, persist) lives in the roadmap, not here.
-function ComparisonTrayEmpty() {
-  return (
-    <div className="tray" id="tray">
-      <div className="tray-handle" id="tray-handle">
-        <span className="h-eyebrow">Comparison flight</span>
-        <span className="h-title">
-          0 <em>of 4</em> specimens
-        </span>
-      </div>
-      <div className="tray-slots">
-        {["i.", "ii.", "iii.", "iv."].map((n) => (
-          <div className="tray-slot empty" key={n}>
-            <span className="tray-num">{n}</span>
-            <span className="ts-plus">+</span>
-            <div>
-              <div className="ts-name">Add a specimen</div>
-              <span className="ts-sub">Pen or paper</span>
-            </div>
-            <span></span>
-          </div>
-        ))}
-      </div>
-      <div className="tray-actions">
-        <a href="#compare" className="primary">Open compare →</a>
-      </div>
-    </div>
-  );
-}
-
 export function buildHomeReplace(data: {
   pens: PenRow[];
   papers: PaperRow[];
@@ -553,13 +523,18 @@ export function buildHomeReplace(data: {
       return <FeaturedPairing pr={data.pairingOfWeek} />;
     }
 
-    // ─── Sticky comparison tray (empty state) ────────────────
+    // ─── Sticky comparison tray (live state) ─────────────────
     if (
       node.name === "div" &&
       node.attribs.id === "tray" &&
       hasClass(node, "tray")
     ) {
-      return <ComparisonTrayEmpty />;
+      return <CompareTray />;
+    }
+
+    // ─── Compare section grid (live state) ───────────────────
+    if (node.name === "div" && hasClass(node, "compare-grid")) {
+      return <CompareGrid />;
     }
 
     // ─── Picker result list (engine not yet wired) ───────────

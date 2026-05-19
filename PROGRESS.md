@@ -26,7 +26,7 @@ Two parallel numberings to avoid confusion:
 | **P9.2** | All page copy dynamic | ✅ done | `page_copy` key/value table + `{placeholder}` template substitution. Home + detail breadcrumbs bound. Author edits any string in Studio. |
 | **P11** | Real pairing engine (attribute-driven) | ✅ done (2026-05-18) | SQL function library: `fn_paper_retention`, `fn_nib_tooth_pref`, `fn_flex_demand`, `fn_sizing_supply` + 5 axis-scoring functions encoding fountain-pen specialist rules (wet ink × sizing, nib size × tooth, sheen × smoothness, flex × sizing, use × mood) + safety warnings (demonstrator staining, iron-gall on uncoated, shimmer in EF nibs, bleed-through risk). `pair_match_for_pen`/`_for_paper` RPCs return ranked partners with axis breakdown + warnings. Wired into `<section id="related">` on pen + paper detail pages via `<OptimalPairings>` component. Custom 823 → Tomoe River S = 87 affinity; Crown Mill cotton = 66 (correctly ranked last for a wet vacuum-filler). |
 | **P12** | Seed inks for hue/wetness/sheen/shimmer variety | ✅ done | +7 inks (Diamine Oxblood, Iroshizuku Yama-budo, Sailor Yama-dori, Robert Oster Fire & Ice, Noodler's Black, Platinum Carbon Black, J. Herbin Emerald of Chivor, Sailor Souten). Ink Cupboard reads 9 now. |
-| **P10** | Real Compare engine | 🟥 queued | Client state + add/remove buttons on detail pages + side-by-side grid. |
+| **P10** | Real Compare engine | ✅ done (2026-05-18) | Client state in localStorage (`pp.compare`, max 4). Cross-tab sync via `storage` event + custom event. `<CompareTray>` replaces the sticky tray on / with live slots (add/remove buttons). `<AddToCompareButton>` lives in the hero `.acts` block on pen/paper/ink detail pages — toggles in/out of the set. `<CompareGrid>` fetches each entity's row via Supabase REST and renders a side-by-side attribute table; rows where every visible value agrees get the `.match` tint. Same-kind selections use kind-specific attribute rows (pens: nib material, size, flex, filler, body, dims, etc.); mixed kinds fall back to shared identity rows. Verified live: tray reads "2 of 4 specimens" after adding Custom 823 + 2000 Bauhaus, grid shows 15 rows / 3 match-tinted. |
 
 ### P2 design constraints
 
@@ -70,4 +70,4 @@ Two parallel numberings to avoid confusion:
 
 ---
 
-*Last updated: 2026-05-18 by P11 close-out (attribute-driven pairing engine live).*
+*Last updated: 2026-05-18 by P10 close-out (real compare engine).*

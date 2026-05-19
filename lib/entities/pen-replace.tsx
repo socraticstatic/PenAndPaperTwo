@@ -17,6 +17,7 @@ import { formatArchive, hasClass, splitVariant } from "./format";
 import { PenAttributeCards } from "./pen-attribute-cards";
 import { WritingSamples } from "./writing-samples";
 import { OptimalPairings } from "./optimal-pairings";
+import { AddToCompareButton } from "@/components/AddToCompareButton";
 import type {
   PairingWithSides,
   PaperMatchForPen,
@@ -116,6 +117,31 @@ export function buildPenReplace(
     // with engine-computed best papers for this pen.
     if (node.name === "section" && node.attribs.id === "related") {
       return <OptimalPairings side="for-pen" matches={paperMatches} />;
+    }
+
+    // Hero CTAs — swap the prototype's plain "Add to compare" link for
+    // the live AddToCompareButton.
+    if (node.name === "div" && hasClass(node, "acts")) {
+      const photos = (pen.photos ?? {}) as Record<string, unknown>;
+      return (
+        <div className="acts">
+          <a href="#pairings-here" className="primary">
+            See its pairings →
+          </a>
+          <AddToCompareButton
+            item={{
+              id: pen.id,
+              kind: "pen",
+              brand: pen.brand,
+              model: pen.model,
+              variant: pen.variant ?? undefined,
+              archiveNumber: pen.archive_number,
+              silhouetteId: (photos.silhouetteId as string | undefined) ?? "pen-classic",
+              silhouetteColor: (photos.silhouetteColor as string | undefined) ?? "oklch(28% 0.04 80)",
+            }}
+          />
+        </div>
+      );
     }
 
     if (node.name === "div" && hasClass(node, "keyspecs")) {

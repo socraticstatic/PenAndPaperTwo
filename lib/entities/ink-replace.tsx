@@ -12,6 +12,7 @@ import type {
 } from "@/lib/supabase/jsonb-shapes";
 import { formatArchive, hasClass } from "./format";
 import { InkAttributeCards } from "./ink-attribute-cards";
+import { AddToCompareButton } from "@/components/AddToCompareButton";
 
 export function buildInkReplace(
   ink: InkRow,
@@ -107,6 +108,28 @@ export function buildInkReplace(
     // Render empty (no fake substitutes) until that engine exists.
     if (node.name === "div" && hasClass(node, "samples-grid")) {
       return <div className="samples-grid" />;
+    }
+
+    if (node.name === "div" && hasClass(node, "acts")) {
+      const color = (ink.color ?? {}) as Record<string, unknown>;
+      return (
+        <div className="acts">
+          <a href="#pairings-here" className="primary">
+            See its pairings →
+          </a>
+          <AddToCompareButton
+            item={{
+              id: ink.id,
+              kind: "ink",
+              brand: ink.brand,
+              model: ink.model,
+              variant: ink.variant ?? undefined,
+              archiveNumber: ink.archive_number,
+              hex: (color.hex as string | undefined) ?? "#222",
+            }}
+          />
+        </div>
+      );
     }
 
     return undefined;

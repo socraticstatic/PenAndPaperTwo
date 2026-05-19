@@ -25,6 +25,7 @@ import {
 } from "@/lib/supabase/page-copy";
 import { CompareTray } from "@/components/CompareTray";
 import { CompareGrid } from "@/components/CompareGrid";
+import { SommelierResults } from "@/components/SommelierResults";
 import {
   PairingsCatalogueSection,
   PaperArchiveSection,
@@ -584,22 +585,11 @@ export function buildHomeReplace(data: {
       return <CompareGrid />;
     }
 
-    // ─── Picker result list (engine not yet wired) ───────────
-    // The real engine = 5-axis Euclidean match RPC over `pairings`.
-    // Until that exists, render the head + an empty body — never
-    // the prototype's three hard-coded sample results.
+    // ─── Sommelier picker results (live) ─────────────────────
+    // Driven by public.pair_match_by_axes — reads the 5 slider values
+    // on each input event, debounces, and renders the ranked output.
     if (node.name === "aside" && hasClass(node, "picker-results")) {
-      return (
-        <aside className="picker-results">
-          <div className="picker-results-head">
-            <span className="pr-eyebrow">Matches</span>
-            <div className="pr-count">
-              <em data-out="count">—</em> marriages match
-            </div>
-            <span className="pr-meta">Engine not yet wired</span>
-          </div>
-        </aside>
-      );
+      return <SommelierResults />;
     }
 
     // The two `<div class="archive-grid">` blocks both have the same

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { PrototypeShell } from "@/components/PrototypeShell";
 import { fetchPaperById, listPaperIds } from "@/lib/supabase/papers";
-import { fetchPairingsForPaper } from "@/lib/supabase/pairings";
+import {
+  fetchPairingsForPaper,
+  fetchPenMatchesForPaper,
+} from "@/lib/supabase/pairings";
 import { fetchEntityTotals } from "@/lib/supabase/site-meta";
 import { buildPaperReplace } from "@/lib/entities/paper-replace";
 
@@ -27,10 +30,11 @@ export default async function PaperDetailPage({
   params: Promise<Params>;
 }) {
   const { id } = await params;
-  const [paper, pairings, totals] = await Promise.all([
+  const [paper, pairings, totals, penMatches] = await Promise.all([
     fetchPaperById(id),
     fetchPairingsForPaper(id, 3),
     fetchEntityTotals(),
+    fetchPenMatchesForPaper(id, 6),
   ]);
   if (!paper) {
     return (
@@ -45,7 +49,7 @@ export default async function PaperDetailPage({
   return (
     <PrototypeShell
       prototypeFile="paper.html"
-      replace={buildPaperReplace(paper, pairings, totals.papers)}
+      replace={buildPaperReplace(paper, pairings, totals.papers, penMatches)}
     />
   );
 }

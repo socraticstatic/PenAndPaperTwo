@@ -16,12 +16,17 @@ import type {
 import { formatArchive, hasClass, splitVariant } from "./format";
 import { PenAttributeCards } from "./pen-attribute-cards";
 import { WritingSamples } from "./writing-samples";
-import type { PairingWithSides } from "@/lib/supabase/pairings";
+import { OptimalPairings } from "./optimal-pairings";
+import type {
+  PairingWithSides,
+  PaperMatchForPen,
+} from "@/lib/supabase/pairings";
 
 export function buildPenReplace(
   pen: PenRow,
   pairings: PairingWithSides[] = [],
   totalPens = 0,
+  paperMatches: PaperMatchForPen[] = [],
 ): HTMLReactParserOptions["replace"] {
   const nib = (pen.nib ?? {}) as PenNib;
   const ink = (pen.ink_delivery ?? {}) as PenInkDelivery;
@@ -105,6 +110,12 @@ export function buildPenReplace(
     // Writing-sample cards — real pairings featuring this pen.
     if (node.name === "div" && hasClass(node, "samples-grid")) {
       return <WritingSamples pairings={pairings} side="pen" />;
+    }
+
+    // Replace the prototype's "Also in the Drawer" related-pens rail
+    // with engine-computed best papers for this pen.
+    if (node.name === "section" && node.attribs.id === "related") {
+      return <OptimalPairings side="for-pen" matches={paperMatches} />;
     }
 
     if (node.name === "div" && hasClass(node, "keyspecs")) {

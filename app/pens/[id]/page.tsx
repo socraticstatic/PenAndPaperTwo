@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { PrototypeShell } from "@/components/PrototypeShell";
 import { fetchPenById, listPenIds } from "@/lib/supabase/pens";
-import { fetchPairingsForPen } from "@/lib/supabase/pairings";
+import {
+  fetchPairingsForPen,
+  fetchPaperMatchesForPen,
+} from "@/lib/supabase/pairings";
 import { fetchEntityTotals } from "@/lib/supabase/site-meta";
 import { buildPenReplace } from "@/lib/entities/pen-replace";
 
@@ -29,10 +32,11 @@ export default async function PenDetailPage({
   params: Promise<Params>;
 }) {
   const { id } = await params;
-  const [pen, pairings, totals] = await Promise.all([
+  const [pen, pairings, totals, paperMatches] = await Promise.all([
     fetchPenById(id),
     fetchPairingsForPen(id, 3),
     fetchEntityTotals(),
+    fetchPaperMatchesForPen(id, 6),
   ]);
   if (!pen) {
     return (
@@ -47,7 +51,7 @@ export default async function PenDetailPage({
   return (
     <PrototypeShell
       prototypeFile="pen.html"
-      replace={buildPenReplace(pen, pairings, totals.pens)}
+      replace={buildPenReplace(pen, pairings, totals.pens, paperMatches)}
     />
   );
 }

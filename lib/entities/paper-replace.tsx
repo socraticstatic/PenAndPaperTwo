@@ -16,7 +16,11 @@ import type {
 import { formatArchive, hasClass } from "./format";
 import { PaperAttributeCards } from "./paper-attribute-cards";
 import { WritingSamples } from "./writing-samples";
-import type { PairingWithSides } from "@/lib/supabase/pairings";
+import { OptimalPairings } from "./optimal-pairings";
+import type {
+  PairingWithSides,
+  PenMatchForPaper,
+} from "@/lib/supabase/pairings";
 
 function sheenLabel(score: number): string {
   return (
@@ -35,6 +39,7 @@ export function buildPaperReplace(
   p: PaperRow,
   pairings: PairingWithSides[] = [],
   totalPapers = 0,
+  penMatches: PenMatchForPaper[] = [],
 ): HTMLReactParserOptions["replace"] {
   const substance = (p.substance ?? {}) as PaperSubstance;
   const surface = (p.surface ?? {}) as PaperSurface;
@@ -144,6 +149,11 @@ export function buildPaperReplace(
     // Writing-sample cards — real pairings featuring this paper.
     if (node.name === "div" && hasClass(node, "samples-grid")) {
       return <WritingSamples pairings={pairings} side="paper" />;
+    }
+
+    // Engine recommendations: top pens for this paper.
+    if (node.name === "section" && node.attribs.id === "related") {
+      return <OptimalPairings side="for-paper" matches={penMatches} />;
     }
 
     if (node.name === "div" && hasClass(node, "keyspecs")) {

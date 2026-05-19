@@ -21,9 +21,12 @@ Two parallel numberings to avoid confusion:
 | **P6** | Seed real entities + research full attributes | ✅ done (2026-05-18) | Pilot 823 and Tomoe River S expanded to full schema (heritage, service, ergonomics, all spec groups). 7 more pens seeded with web-researched specs (Pelikan M800, Lamy 2000, Sailor Pro Gear Slim, Aurora 88, Platinum 3776 Century, TWSBI Diamond 580, Pilot Vanishing Point). 8 papers (added Rhodia №16, Midori MD, Clairefontaine Triomphe, Cosmo Air Light, Apica CD Premium, Crown Mill Pure Cotton Laid, Maruman Mnemosyne, Kokuyo Shoshikku). 3 more pairings (Lamy×Rhodia, Pelikan×Triomphe, Sailor×MD). Home grids now show 8/8/4. Ink left as Tsuki-yo (1 row) per directive. |
 | **P7** | Bind detail-page attribute cards below hero | ✅ done (2026-05-18) | All 8 pen cards, all 8 paper cards, all 6 ink cards, and pairing's 5-axis breakdown + measurements + conditions tables now bind from the row JSONB. Progressive disclosure: empty rows / empty cards hidden. New modules: `lib/entities/pen-attribute-cards.tsx`, `paper-attribute-cards.tsx`, `ink-attribute-cards.tsx`, `pairing-extras.tsx`. Pairing uses a counter closure to distinguish the two `<table class="meas-table">` elements (first → measurements, second → conditions). |
 | **P8** | Eliminate remaining hard-coding on home + detail pages | ✅ done (2026-05-18) | Pairing-of-the-week hero bound to `is_pairing_of_week=true`. `site_meta` key/value table seeded for masthead chrome (Volume, season, tagline, editors). "N Entries" line computed from row totals. Topbar meta bound. Writing-sample cards on /pens/[id] + /papers/[id] bind to actual pairings featuring that entity. Comparison tray + picker result list rendered in honest empty states — NO fake substitutes. |
-| **P9** | Real Search engine | ✅ done (2026-05-18) | Per design CLAUDE.md §10.1 option (b): tsvector per-table trigger (english config, A/B/C weights) + GIN index + `search_index()` + `search_almanac(q,lim)` RPCs. New search.js queries Supabase REST RPC directly (anon key from layout-injected `window.ppSupabaseConfig`), debounced 150ms; recently-viewed unchanged. Multi-token AND ranking verified live for brand/model/multi-word queries. |
-| **P10** | Real Compare engine | 🟥 queued | State + persistence + side-by-side grid. |
-| **P11** | Real Sommelier picker engine | 🟥 queued | 5-axis Euclidean match RPC. |
+| **P9** | Real Search engine | ✅ done (2026-05-18) | tsvector triggers + GIN + `search_almanac` RPC w/ prefix tokens (`pil` matches Pilot). |
+| **P9.1** | Search prefix matching | ✅ done | `to_tsquery` w/ `:*` per token. |
+| **P9.2** | All page copy dynamic | ✅ done | `page_copy` key/value table + `{placeholder}` template substitution. Home + detail breadcrumbs bound. Author edits any string in Studio. |
+| **P11** | Real pairing engine (attribute-driven) | ✅ done (2026-05-18) | SQL function library: `fn_paper_retention`, `fn_nib_tooth_pref`, `fn_flex_demand`, `fn_sizing_supply` + 5 axis-scoring functions encoding fountain-pen specialist rules (wet ink × sizing, nib size × tooth, sheen × smoothness, flex × sizing, use × mood) + safety warnings (demonstrator staining, iron-gall on uncoated, shimmer in EF nibs, bleed-through risk). `pair_match_for_pen`/`_for_paper` RPCs return ranked partners with axis breakdown + warnings. Wired into `<section id="related">` on pen + paper detail pages via `<OptimalPairings>` component. Custom 823 → Tomoe River S = 87 affinity; Crown Mill cotton = 66 (correctly ranked last for a wet vacuum-filler). |
+| **P12** | Seed inks for hue/wetness/sheen/shimmer variety | ✅ done | +7 inks (Diamine Oxblood, Iroshizuku Yama-budo, Sailor Yama-dori, Robert Oster Fire & Ice, Noodler's Black, Platinum Carbon Black, J. Herbin Emerald of Chivor, Sailor Souten). Ink Cupboard reads 9 now. |
+| **P10** | Real Compare engine | 🟥 queued | Client state + add/remove buttons on detail pages + side-by-side grid. |
 
 ### P2 design constraints
 
@@ -67,4 +70,4 @@ Two parallel numberings to avoid confusion:
 
 ---
 
-*Last updated: 2026-05-18 by P9 close-out (real DB-backed search engine).*
+*Last updated: 2026-05-18 by P11 close-out (attribute-driven pairing engine live).*

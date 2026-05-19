@@ -74,6 +74,68 @@ export async function fetchPairingsForPen(
   return (data ?? []) as unknown as PairingWithSides[];
 }
 
+// Pairing engine results — ranked partner suggestions computed from
+// attribute compatibility (see migration `pairing_engine_v2` for the
+// scoring formulas). Used to drive the "Optimal pairings" rail on
+// detail pages and the Sommelier picker results.
+export type PairingMatchAxes = {
+  wetnessAbsorbency: number;
+  nibSizeTooth: number;
+  sheenSmoothness: number;
+  flexSizing: number;
+  useMood: number;
+};
+
+export type PaperMatchForPen = {
+  paper_id: string;
+  paper_brand: string;
+  paper_model: string;
+  paper_archive_no: number;
+  overall: number;
+  axes: PairingMatchAxes;
+  warnings: string[];
+};
+
+export type PenMatchForPaper = {
+  pen_id: string;
+  pen_brand: string;
+  pen_model: string;
+  pen_archive_no: number;
+  overall: number;
+  axes: PairingMatchAxes;
+  warnings: string[];
+};
+
+export async function fetchPaperMatchesForPen(
+  penId: string,
+  limit: number = 6,
+): Promise<PaperMatchForPen[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("pair_match_for_pen", {
+    p_id: penId,
+    lim: limit,
+  });
+  if (error) {
+    throw new Error(`fetchPaperMatchesForPen(${penId}) failed: ${error.message}`);
+  }
+  return (data ?? []) as unknown as PaperMatchForPen[];
+}
+
+export async function fetchPenMatchesForPaper(
+  paperId: string,
+  limit: number = 6,
+): Promise<PenMatchForPaper[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("pair_match_for_paper", {
+    p_id: paperId,
+    lim: limit,
+  });
+  if (error) {
+    throw new Error(`fetchPenMatchesForPaper(${paperId}) failed: ${error.message}`);
+  }
+  return (data ?? []) as unknown as PenMatchForPaper[];
+}
+
 // Mirror of fetchPairingsForPen for the paper detail page.
 export async function fetchPairingsForPaper(
   paperId: string,
